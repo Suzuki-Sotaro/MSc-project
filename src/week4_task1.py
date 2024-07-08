@@ -4,20 +4,25 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.metrics import confusion_matrix
 
-# ディレクトリの作成
+# This task generates synthetic time-series data using an AR(1) process,
+# applies both Non-parametric and Parametric CuSum methods to detect change points,
+# and evaluates their performance in terms of false alarm rates and expected delay.
+# The results are saved in a specified directory.
+
+# Create directory for Task 1 results
 task1_dir = os.path.join('results', 'Task1')
 os.makedirs(task1_dir, exist_ok=True)
 
-# パラメータの設定
+# Set parameters for data generation
 mean0 = 0
 variance0 = 1
 mean1 = 1
 variance1 = 1
 theta_values = [0.1, 0.5, 0.8]
-t_change = 100  # 変更点
-n_samples = 200  # データポイントの総数
+t_change = 100  # Change point
+n_samples = 200  # Total number of data points
 
-# AR(1)プロセスに基づく合成データの生成
+# Function to generate AR(1) process data
 def generate_ar1_data(mean0, variance0, mean1, variance1, theta, t_change, n_samples):
     data = np.zeros(n_samples)
     data[0] = mean0
@@ -29,7 +34,7 @@ def generate_ar1_data(mean0, variance0, mean1, variance1, theta, t_change, n_sam
         data[t] = data[t-1] + (1-theta)*(mean1 - data[t-1]) + e_t
     return data
 
-# データの生成とプロット
+# Generate and plot AR(1) process data for different theta values
 plt.figure(figsize=(12, 6))
 for theta in theta_values:
     data = generate_ar1_data(mean0, variance0, mean1, variance1, theta, t_change, n_samples)
@@ -42,7 +47,7 @@ plt.legend()
 plt.savefig(os.path.join(task1_dir, 'ar1_process_data.png'))
 plt.close()
 
-# 非パラメトリックCuSumの実行
+# Function to execute non-parametric CuSum
 def calculate_cusum(data, window_size, threshold):
     n = len(data)
     reference_window = data[:window_size]
@@ -52,10 +57,10 @@ def calculate_cusum(data, window_size, threshold):
         distance = np.abs(np.mean(reference_window) - np.mean(test_window))
         cusum[t] = cusum[t-1] + distance
         if cusum[t] > threshold:
-            return t, cusum  # 変更点を検出
-    return -1, cusum  # 変更点を検出できない場合
+            return t, cusum  # Detect change point
+    return -1, cusum  # No change point detected
 
-# パラメトリックCuSumの実行
+# Function to execute parametric CuSum
 def parametric_cusum(data, mean0, mean1, variance0, variance1, threshold):
     n = len(data)
     cusum = np.zeros(n)
@@ -63,27 +68,27 @@ def parametric_cusum(data, mean0, mean1, variance0, variance1, threshold):
         k_t = (mean1 - mean0) / np.sqrt(variance1 + variance0)
         cusum[t] = max(0, cusum[t-1] + k_t * (data[t] - (mean0 + mean1) / 2))
         if cusum[t] > threshold:
-            return t, cusum  # 変更点を検出
-    return -1, cusum  # 変更点を検出できない場合
+            return t, cusum  # Detect change point
+    return -1, cusum  # No change point detected
 
-# ウィンドウサイズとしきい値の設定
+# Set window sizes and threshold
 window_sizes = [10, 20, 30]
-threshold = 5  # しきい値
+threshold = 5  # Threshold
 
-# 実験結果の格納
+# Store experiment results
 results = []
 
 for theta in theta_values:
     data = generate_ar1_data(mean0, variance0, mean1, variance1, theta, t_change, n_samples)
     
     for window_size in window_sizes:
-        # 非パラメトリックCuSum
+        # Non-parametric CuSum
         change_point_np, cusum_np = calculate_cusum(data, window_size, threshold)
         
-        # パラメトリックCuSum
+        # Parametric CuSum
         change_point_p, cusum_p = parametric_cusum(data, mean0, mean1, variance0, variance1, threshold)
         
-        # 真のラベルと予測ラベルの設定
+        # Set true and predicted labels
         true_labels = np.zeros(n_samples)
         true_labels[t_change:] = 1
         
@@ -95,18 +100,18 @@ for theta in theta_values:
         if change_point_p != -1:
             pred_labels_p[change_point_p:] = 1
         
-        # 混同行列の計算
+        # Calculate confusion matrix
         cm_np = confusion_matrix(true_labels, pred_labels_np)
         cm_p = confusion_matrix(true_labels, pred_labels_p)
         
-        # 偽アラーム率と期待遅延の計算
+        # Calculate false alarm rate and expected delay
         false_alarm_rate_np = cm_np[0, 1] / (cm_np[0, 0] + cm_np[0, 1])
         expected_delay_np = change_point_np - t_change if change_point_np != -1 else n_samples
         
         false_alarm_rate_p = cm_p[0, 1] / (cm_p[0, 0] + cm_p[0, 1])
         expected_delay_p = change_point_p - t_change if change_point_p != -1 else n_samples
         
-        # 結果の格納
+        # Store results
         results.append({
             'Theta': theta,
             'Window Size': window_size,
@@ -118,7 +123,7 @@ for theta in theta_values:
             'Expected Delay (Parametric)': expected_delay_p
         })
 
-        # プロットの保存
+        # Save plots
         plt.figure(figsize=(12, 6))
         plt.plot(data, label='Data')
         plt.axvline(t_change, color='r', linestyle='--', label='True Change Point')
@@ -135,7 +140,7 @@ for theta in theta_values:
         plt.savefig(os.path.join(task1_dir, f'cusum_theta_{theta}_window_{window_size}.png'))
         plt.close()
 
-# 結果のデータフレーム作成
+# Create and save results DataFrame
 results_df = pd.DataFrame(results)
 results_df.to_csv(os.path.join(task1_dir, 'results.csv'), index=False)
 print(results_df)

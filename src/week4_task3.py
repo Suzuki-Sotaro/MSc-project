@@ -4,27 +4,31 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
 
-# ディレクトリの作成
+# This task loads bus data, applies Non-parametric CuSum to detect change points,
+# and evaluates the results for different window sizes and thresholds.
+# The results are saved in a specified directory.
+
+# Create directory for Task 3 results
 task3_dir = os.path.join('results', 'Task3')
 os.makedirs(task3_dir, exist_ok=True)
 
-# データの読み込み
+# Load data from the specified CSV file
 file_path = './data/A_LMPFreq3_Labeled.csv'
 data = pd.read_csv(file_path)
 
-# 使用するバス番号
+# Specify bus numbers to analyze
 bus_numbers = [115, 116, 117, 118, 119, 121, 135, 139]
 
-# 最後の855値を抽出
+# Extract the last 855 values
 data_last_855 = data.iloc[-855:]
 
-# バスのデータを抽出
+# Extract data for each specified bus
 bus_data = {bus: data_last_855[f'Bus{bus}'].values for bus in bus_numbers}
 
-# ラベルを抽出
+# Extract labels
 labels = data_last_855['Label'].values
 
-# 非パラメトリックCuSumの実行
+# Function to execute non-parametric CuSum
 def calculate_cusum(data, window_size, threshold):
     n = len(data)
     reference_window = data[:window_size]
@@ -34,17 +38,17 @@ def calculate_cusum(data, window_size, threshold):
         distance = np.abs(np.mean(reference_window) - np.mean(test_window))
         cusum[t] = cusum[t-1] + distance
         if cusum[t] > threshold:
-            return t, cusum  # 変更点を検出
-    return -1, cusum  # 変更点を検出できない場合
+            return t, cusum  # Detect change point
+    return -1, cusum  # No change point detected
 
-# ウィンドウサイズとしきい値の設定
+# Set window sizes and thresholds
 window_sizes = [30, 50, 70]
 thresholds = [5, 10, 15]
 
-# 結果の格納用リスト
+# List to store results
 results = []
 
-# 各バスデータに対してCuSumを実行し、結果をプロット
+# Execute CuSum for each bus data, plot the results, and store the results
 for window_size in window_sizes:
     for threshold in thresholds:
         fig, axes = plt.subplots(len(bus_numbers), 1, figsize=(14, 16), sharex=True)
@@ -55,14 +59,14 @@ for window_size in window_sizes:
             data_feature = bus_data[bus]
             change_point, cusum = calculate_cusum(data_feature, window_size, threshold)
             
-            # バスデータのプロット
+            # Plot bus data
             ax.plot(data_feature, label=f'Bus {bus} Data')
-            # CuSumのプロット
+            # Plot CuSum results
             ax.plot(cusum, label=f'CuSum (Bus {bus})', linestyle='--')
-            # 真のラベルのプロット
+            # Plot true labels
             ax.plot(labels * max(cusum), label='True Labels', linestyle='-.')
             
-            # 変更点の表示
+            # Mark detected change point
             if change_point != -1:
                 ax.axvline(change_point, color='r', linestyle=':', label='Detected Change')
             
@@ -70,7 +74,7 @@ for window_size in window_sizes:
             ax.set_ylabel('Value')
             ax.legend()
             
-            # 結果の格納
+            # Store results
             pred_labels = np.zeros(len(labels))
             if change_point != -1:
                 pred_labels[change_point:] = 1
@@ -98,7 +102,7 @@ for window_size in window_sizes:
         plt.savefig(os.path.join(task3_dir, f'cusum_window_{window_size}_threshold_{threshold}.png'))
         plt.close()
 
-# 結果のデータフレーム作成
+# Create and save results DataFrame
 results_df = pd.DataFrame(results)
 results_df = results_df[['Bus', 'Window Size', 'Threshold', 'Change Point', 'Accuracy', 'Precision', 'Recall', 'F1 Score']]
 results_df.to_csv(os.path.join(task3_dir, 'results.csv'), index=False)

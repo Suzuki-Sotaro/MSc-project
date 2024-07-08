@@ -3,11 +3,14 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# ディレクトリの作成
+# This task loads gas sensor data, applies Non-parametric CuSum to detect change points,
+# and evaluates the results for different window sizes. The results are saved in a specified directory.
+
+# Create directory for Task 2 results
 task2_dir = os.path.join('results', 'Task2')
 os.makedirs(task2_dir, exist_ok=True)
 
-# データの読み込み
+# Function to load gas sensor data
 def load_gas_sensor_data(data_dir):
     data = []
     for i in range(1, 11):
@@ -21,20 +24,20 @@ def load_gas_sensor_data(data_dir):
                 data.append(features)
     return np.array(data)
 
-# データディレクトリ
+# Data directory
 data_dir = './data/gas_sensor_dataset/'
 
-# データの読み込み
+# Load gas sensor data
 gas_sensor_data = load_gas_sensor_data(data_dir)
 
-# データの形状を確認
+# Check the shape of the data
 print(gas_sensor_data.shape)
 
-# 一つの特徴量に焦点を当てる (例: 最初の特徴量)
+# Focus on one feature (e.g., the first feature)
 feature_index = 0
 data_feature = gas_sensor_data[:, feature_index]
 
-# データのプロット
+# Plot the data
 plt.figure(figsize=(12, 6))
 plt.plot(data_feature)
 plt.title(f'Gas Sensor Data - Feature {feature_index + 1}')
@@ -43,7 +46,7 @@ plt.ylabel('Value')
 plt.savefig(os.path.join(task2_dir, f'gas_sensor_feature_{feature_index + 1}.png'))
 plt.close()
 
-# 非パラメトリックCuSumの実行
+# Function to execute non-parametric CuSum
 def calculate_cusum(data, window_size, threshold):
     n = len(data)
     reference_window = data[:window_size]
@@ -53,14 +56,14 @@ def calculate_cusum(data, window_size, threshold):
         distance = np.abs(np.mean(reference_window) - np.mean(test_window))
         cusum[t] = cusum[t-1] + distance
         if cusum[t] > threshold:
-            return t, cusum  # 変更点を検出
-    return -1, cusum  # 変更点を検出できない場合
+            return t, cusum  # Detect change point
+    return -1, cusum  # No change point detected
 
-# ウィンドウサイズとしきい値の設定
+# Set window sizes and threshold
 window_sizes = [50, 100, 150]
-threshold = 10  # しきい値
+threshold = 10  # Threshold
 
-# CuSumの実行とプロット
+# Execute CuSum and plot results
 results = []
 plt.figure(figsize=(12, 6))
 plt.plot(data_feature, label='Data')
@@ -80,7 +83,7 @@ plt.legend()
 plt.savefig(os.path.join(task2_dir, f'cusum_feature_{feature_index + 1}.png'))
 plt.close()
 
-# 結果のデータフレーム作成
+# Create and save results DataFrame
 results_df = pd.DataFrame(results)
 results_df.to_csv(os.path.join(task2_dir, 'results.csv'), index=False)
 print(results_df)
