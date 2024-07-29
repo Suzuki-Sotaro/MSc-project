@@ -1,0 +1,13 @@
+Aggregation Method,Sink Threshold Method,Sink Threshold,Detection Time,Accuracy,Precision,Recall,F1 Score
+average,average,17.125,-1,0.8035087719298246,0.0,0.0,0.0
+average,minimum,10.0,-1,0.8035087719298246,0.0,0.0,0.0
+average,maximum,19.0,-1,0.8035087719298246,0.0,0.0,0.0
+average,median,19.0,-1,0.8035087719298246,0.0,0.0,0.0
+median,average,17.125,-1,0.8035087719298246,0.0,0.0,0.0
+median,minimum,10.0,-1,0.8035087719298246,0.0,0.0,0.0
+median,maximum,19.0,-1,0.8035087719298246,0.0,0.0,0.0
+median,median,19.0,-1,0.8035087719298246,0.0,0.0,0.0
+outlier_detection,average,17.125,-1,0.8035087719298246,0.0,0.0,0.0
+outlier_detection,minimum,10.0,-1,0.8035087719298246,0.0,0.0,0.0
+outlier_detection,maximum,19.0,-1,0.8035087719298246,0.0,0.0,0.0
+outlier_detection,median,19.0,-1,0.8035087719298246,0.0,0.0,0.0
