@@ -1,119 +1,96 @@
 # 以下はperformance_metrics.pyのコードです。
+from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 import numpy as np
-from sklearn.metrics import precision_score, recall_score, f1_score
 
-def calculate_detection_delay(true_changes, detected_changes, tolerance=5):
-    """
-    Calculate the average detection delay.
-    
-    Args:
-    true_changes (list): Indices of true change points.
-    detected_changes (list): Indices of detected change points.
-    tolerance (int): Maximum allowed delay to consider a detection as correct.
-    
-    Returns:
-    float: Average detection delay.
-    """
-    delays = []
-    for true_change in true_changes:
-        for detected_change in detected_changes:
-            if 0 <= detected_change - true_change <= tolerance:
-                delays.append(detected_change - true_change)
-                break
-    return np.mean(delays) if delays else np.inf
+class PerformanceMetrics:
+    def __init__(self, true_labels, predicted_labels, detection_times=None):
+        """
+        Initialize the PerformanceMetrics class.
 
-def calculate_false_alarm_rate(true_changes, detected_changes, total_samples, tolerance=5):
-    """
-    Calculate the false alarm rate.
-    
-    Args:
-    true_changes (list): Indices of true change points.
-    detected_changes (list): Indices of detected change points.
-    total_samples (int): Total number of samples in the dataset.
-    tolerance (int): Maximum allowed delay to consider a detection as correct.
-    
-    Returns:
-    float: False alarm rate.
-    """
-    false_alarms = 0
-    for detected_change in detected_changes:
-        if all(abs(detected_change - true_change) > tolerance for true_change in true_changes):
-            false_alarms += 1
-    return false_alarms / total_samples
+        Parameters:
+        - true_labels: Ground truth labels (1 for change, 0 for no change).
+        - predicted_labels: Predicted labels from the change detection algorithm.
+        - detection_times: (Optional) List of detection times for calculating delay metrics.
+        """
+        self.true_labels = true_labels
+        self.predicted_labels = predicted_labels
+        self.detection_times = detection_times
 
-def calculate_detection_rate(true_changes, detected_changes, tolerance=5):
-    """
-    Calculate the detection rate (recall).
-    
-    Args:
-    true_changes (list or np.array): Indices of true change points.
-    detected_changes (list): Indices of detected change points.
-    tolerance (int): Maximum allowed delay to consider a detection as correct.
-    
-    Returns:
-    float: Detection rate.
-    """
-    true_changes = np.array(true_changes)  # 確実にNumPy配列に変換
-    detected = np.sum([np.any((detected_changes >= tc) & (detected_changes <= tc + tolerance)) for tc in true_changes])
-    return detected / len(true_changes) if len(true_changes) > 0 else 0
+    def calculate_classification_metrics(self):
+        """
+        Calculate classification metrics: Precision, Recall, F1-Score, and Accuracy.
 
-def calculate_f1_score(true_changes, detected_changes, total_samples, tolerance=5):
-    """
-    Calculate the F1 score.
-    
-    Args:
-    true_changes (list): Indices of true change points.
-    detected_changes (list): Indices of detected change points.
-    total_samples (int): Total number of samples in the dataset.
-    tolerance (int): Maximum allowed delay to consider a detection as correct.
-    
-    Returns:
-    float: F1 score.
-    """
-    y_true = np.zeros(total_samples)
-    y_pred = np.zeros(total_samples)
-    
-    for change in true_changes:
-        y_true[max(0, change - tolerance):min(total_samples, change + tolerance + 1)] = 1
-    
-    for change in detected_changes:
-        y_pred[change] = 1
-    
-    return f1_score(y_true, y_pred)
+        Returns:
+        - metrics: A dictionary containing precision, recall, F1-score, and accuracy.
+        """
+        precision = precision_score(self.true_labels, self.predicted_labels)
+        recall = recall_score(self.true_labels, self.predicted_labels)
+        f1 = f1_score(self.true_labels, self.predicted_labels)
+        accuracy = accuracy_score(self.true_labels, self.predicted_labels)
 
-def evaluate_performance(true_changes, detected_changes, total_samples, tolerance=5):
-    """
-    Evaluate the overall performance of the change detection algorithm.
-    
-    Args:
-    true_changes (list): Indices of true change points.
-    detected_changes (list): Indices of detected change points.
-    total_samples (int): Total number of samples in the dataset.
-    tolerance (int): Maximum allowed delay to consider a detection as correct.
-    
-    Returns:
-    dict: A dictionary containing various performance metrics.
-    """
-    avg_delay = calculate_detection_delay(true_changes, detected_changes, tolerance)
-    far = calculate_false_alarm_rate(true_changes, detected_changes, total_samples, tolerance)
-    detection_rate = calculate_detection_rate(true_changes, detected_changes, tolerance)
-    f1 = calculate_f1_score(true_changes, detected_changes, total_samples, tolerance)
-    
-    return {
-        "Average Detection Delay": avg_delay,
-        "False Alarm Rate": far,
-        "Detection Rate": detection_rate,
-        "F1 Score": f1
-    }
+        metrics = {
+            "precision": precision,
+            "recall": recall,
+            "f1_score": f1,
+            "accuracy": accuracy
+        }
 
+        return metrics
+
+    def calculate_detection_delay(self):
+        """
+        Calculate the detection delay based on the detection times.
+
+        Returns:
+        - detection_delay: The average delay from the actual change points to the detected change points.
+        """
+        if self.detection_times is None:
+            raise ValueError("Detection times are not provided.")
+
+        true_change_times = np.where(self.true_labels == 1)[0]
+        delays = []
+
+        for true_time in true_change_times:
+            detected_time = next((t for t in self.detection_times if t >= true_time), None)
+            if detected_time is not None:
+                delays.append(detected_time - true_time)
+
+        detection_delay = np.mean(delays) if delays else None
+        return detection_delay
+
+    def calculate_false_alarm_rate(self):
+        """
+        Calculate the false alarm rate.
+
+        Returns:
+        - false_alarm_rate: The rate of false positives (incorrect change detections).
+        """
+        false_positives = np.sum((self.predicted_labels == 1) & (self.true_labels == 0))
+        total_negatives = np.sum(self.true_labels == 0)
+        false_alarm_rate = false_positives / total_negatives if total_negatives > 0 else 0.0
+        return false_alarm_rate
+
+# Example usage:
 if __name__ == "__main__":
-    # Example usage
-    true_changes = [100, 300, 500]
-    detected_changes = [98, 305, 502, 700]
-    total_samples = 1000
-    
-    performance = evaluate_performance(true_changes, detected_changes, total_samples)
-    
-    print("Performance Metrics:")
-    for metric, value in performance.items():
-        print(f"{metric}: {value}")
+    # Example true and predicted labels (these should be replaced with real data in practice)
+    true_labels = np.array([0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 1])
+    predicted_labels = np.array([0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1])
+    detection_times = [2, 3, 4, 8, 10]  # Example detection times
+
+    # Initialize PerformanceMetrics
+    metrics_calculator = PerformanceMetrics(true_labels, predicted_labels, detection_times)
+
+    # Calculate classification metrics
+    classification_metrics = metrics_calculator.calculate_classification_metrics()
+    print("Classification Metrics:")
+    print(classification_metrics)
+
+    # Calculate detection delay
+    detection_delay = metrics_calculator.calculate_detection_delay()
+    print("\nDetection Delay:")
+    print(detection_delay)
+
+    # Calculate false alarm rate
+    false_alarm_rate = metrics_calculator.calculate_false_alarm_rate()
+    print("\nFalse Alarm Rate:")
+    print(false_alarm_rate)

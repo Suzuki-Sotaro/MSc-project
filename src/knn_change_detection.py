@@ -1,88 +1,91 @@
 # 以下はknn_change_detectionのコードです。
 import numpy as np
-from scipy.spatial.distance import euclidean
-from scipy.stats import chi2
+from sklearn.neighbors import NearestNeighbors
+import pandas as pd
 
-class KNNChangeDetector:
-    def __init__(self, k=5, alpha=0.05, h=10, d=1):
+class KNNChangeDetection:
+    def __init__(self, k=5, alpha=0.01, h=10):
+        """
+        Initialize the KNNChangeDetection class.
+        
+        Parameters:
+        - k: Number of nearest neighbors to use.
+        - alpha: Tail probability threshold for detecting outliers.
+        - h: CUSUM-like threshold for triggering a change.
+        """
         self.k = k
         self.alpha = alpha
         self.h = h
-        self.d = d
-        self.reference_window = None
-        self.cumulative_sum = 0
+        self.neighbors = None
 
-    def euclidean_distance(self, x, y):
-        return euclidean(x.flatten(), y.flatten())
-
-    def compute_knn_distances(self, point, window):
-        distances = [self.euclidean_distance(point, x) for x in window]
-        return sorted(distances)[1:self.k+1]  # Exclude the point itself
-    
-    def compute_tail_prob(self, distance, ref_distances):
-        chi2_statistic = (self.k * distance**2) / np.mean(ref_distances)**2
-        return 1 - chi2.cdf(chi2_statistic, df=2*self.k)
-
-    def update_reference_window(self, new_data):
-        new_data = new_data.reshape(1, -1)
-        if self.reference_window is None:
-            self.reference_window = new_data
-        else:
-            self.reference_window = np.vstack([self.reference_window[1:], new_data])
-
-    def detect_change(self, new_data):
-        new_data = new_data.reshape(1, -1)
-        if self.reference_window is None or len(self.reference_window) < self.k + 1:
-            self.update_reference_window(new_data)
-            return False
-
-        knn_distances = self.compute_knn_distances(new_data, self.reference_window)
-        ref_distances = [self.compute_knn_distances(x.reshape(1, -1), self.reference_window) for x in self.reference_window]
-        ref_distances = np.mean(ref_distances, axis=0)
-
-        tail_prob = self.compute_tail_prob(np.mean(knn_distances), ref_distances)
-        s_t = np.log(self.alpha / tail_prob) if tail_prob > 0 else 0
+    def fit(self, reference_data):
+        """
+        Fit the k-NN model to the reference data.
         
-        self.cumulative_sum = max(0, self.cumulative_sum + s_t)
+        Parameters:
+        - reference_data: Data to use as the reference for k-NN (array-like, shape = [n_samples, n_features]).
+        """
+        self.neighbors = NearestNeighbors(n_neighbors=self.k)
+        self.neighbors.fit(reference_data)
+        print(f"k-NN model fitted with k={self.k} using reference data.")
 
-        change_detected = self.cumulative_sum > self.h
+    def detect_changes(self, test_data):
+        """
+        Detect changes in the test data using k-NN and a CUSUM-like algorithm.
+        
+        Parameters:
+        - test_data: Data to be tested for changes (array-like, shape = [n_samples, n_features]).
+        
+        Returns:
+        - change_points: Indices in the test_data where changes are detected.
+        """
+        if self.neighbors is None:
+            raise ValueError("Model not fitted. Call fit() with reference data before calling detect_changes().")
+        
+        distances, _ = self.neighbors.kneighbors(test_data)
+        tail_probabilities = np.mean(distances, axis=1)
+        
+        # Calculate the threshold for detecting outliers
+        threshold = np.percentile(tail_probabilities, 100 * (1 - self.alpha))
+        
+        # Apply a CUSUM-like algorithm to detect changes
+        cusum = np.cumsum(tail_probabilities - threshold)
+        
+        # Debugging: Print some information about cusum and threshold
+        print(f"Threshold for detecting outliers: {threshold}")
+        print(f"Cumulative Sum (first 10 values): {cusum[:10]}")
+        print(f"Tail Probabilities (first 10 values): {tail_probabilities[:10]}")
+        print(f"Distances (first 10 sets): {distances[:10]}")
+        
+        change_points = np.where(cusum > self.h)[0]
+        
+        # If no changes detected, print a warning
+        if len(change_points) == 0:
+            print("Warning: No changes detected.")
+        
+        return change_points
 
-        if not change_detected:
-            self.update_reference_window(new_data)
-
-        return change_detected
-
-    def reset(self):
-        self.reference_window = None
-        self.cumulative_sum = 0
-
-def sliding_window(data, window_size, d):
-    for i in range(len(data) - window_size + 1):
-        yield data[i:i+window_size].reshape(-1, d)
-
-def detect_changes(data, window_size, k=5, alpha=0.05, h=10, d=1):
-    detector = KNNChangeDetector(k=k, alpha=alpha, h=h, d=d)
-    change_points = []
-
-    for i, window in enumerate(sliding_window(data, window_size, d)):
-        if detector.detect_change(window[-1]):  # 最新のデータポイントのみを渡す
-            change_points.append(i + window_size - 1)
-            detector.reset()
-
-    return change_points
-
+# Example usage:
 if __name__ == "__main__":
-    # Test the KNN Change Detector
     from data_loader import DataLoader
+    
+    file_path = './data/LMP.csv'
+    data_loader = DataLoader(file_path)
+    
+    data_loader.load_data()
+    data_loader.preprocess_data()
+    data = data_loader.get_data()
 
-    loader = DataLoader()
-    loader.load_data()
-    bus_data = loader.get_bus_data(115)['Bus115'].values
+    # Use the first half of the data as reference and the second half as test
+    reference_data = data.iloc[:427, 2:].values  # Assuming the first two columns are 'Week' and 'Label'
+    test_data = data.iloc[427:, 2:].values
 
-    window_size = 10  # Example window size
-    k = 5
-    alpha = 0.01
-    h = 20
+    # Initialize and fit the k-NN change detection model
+    knn_detector = KNNChangeDetection(k=5, alpha=0.01, h=1)  # Lower h to see if it helps detect changes
+    knn_detector.fit(reference_data)
 
-    change_points = detect_changes(bus_data, window_size, k, alpha, h)
-    print(f"Detected change points: {change_points}")
+    # Detect changes in the test data
+    change_points = knn_detector.detect_changes(test_data)
+    
+    # Output the results
+    print(f"Changes detected at the following indices: {change_points}")

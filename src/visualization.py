@@ -1,101 +1,157 @@
 # 以下はvisualization.pyのコードです。
 import matplotlib.pyplot as plt
-import seaborn as sns
-import pandas as pd
-import json
+import numpy as np
+from sklearn.metrics import roc_curve, auc
 
-class Visualizer:
-    def __init__(self, results_file='experiment_results.json'):
-        with open(results_file, 'r') as f:
-            self.results = json.load(f)
-        self.df = pd.DataFrame(self.results)
+class Visualization:
+    def __init__(self, results):
+        """
+        Initialize the Visualization class.
+        
+        Parameters:
+        - results: The results dictionary containing classification metrics, detection delays, and false alarm rates.
+        """
+        self.results = results
 
-    def plot_performance_comparison(self, metric='F1 Score'):
-        plt.figure(figsize=(12, 6))
-        data = self.df[self.df[metric].notna()]  # Exclude rows with NaN values
-        if len(data) > 0:
-            sns.boxplot(x='method', y=metric, data=data)
-            plt.title(f'{metric} Comparison Across Methods')
-            plt.ylabel(metric)
-            plt.xlabel('Method')
-        else:
-            plt.text(0.5, 0.5, f"No valid data for {metric}", ha='center', va='center')
-        plt.savefig(f'{metric.lower().replace(" ", "_")}_comparison.png')
-        plt.close()
+    def plot_detection_performance(self):
+        """
+        Plot detection performance metrics such as precision, recall, and F1-score.
+        """
+        ks, alphas, hs = [], [], []
+        precisions, recalls, f1_scores = [], [], []
 
-    def plot_parameter_sensitivity(self, method, parameter, metric='F1 Score'):
-        method_df = self.df[self.df['method'] == method]
-        plt.figure(figsize=(12, 6))
-        sns.boxplot(x=parameter, y=metric, data=method_df)
-        plt.title(f'{metric} Sensitivity to {parameter} for {method}')
-        plt.ylabel(metric)
-        plt.xlabel(parameter)
-        plt.savefig(f'{method.lower().replace(" ", "_")}_{parameter}_sensitivity.png')
-        plt.close()
+        for (k, alpha, h), metrics in self.results.items():
+            ks.append(k)
+            alphas.append(alpha)
+            hs.append(h)
+            precisions.append(metrics['classification_metrics']['precision'])
+            recalls.append(metrics['classification_metrics']['recall'])
+            f1_scores.append(metrics['classification_metrics']['f1_score'])
 
-    def plot_heatmap(self, method, x_param, y_param, metric='F1 Score'):
-        method_df = self.df[self.df['method'] == method]
-        pivot_table = method_df.pivot_table(values=metric, index=y_param, columns=x_param, aggfunc='mean')
-        plt.figure(figsize=(12, 8))
-        sns.heatmap(pivot_table, annot=True, cmap='YlGnBu', fmt='.3f')
-        plt.title(f'{metric} Heatmap for {method}')
-        plt.ylabel(y_param)
-        plt.xlabel(x_param)
-        plt.savefig(f'{method.lower().replace(" ", "_")}_{metric.lower().replace(" ", "_")}_heatmap.png')
-        plt.close()
+        # Convert lists to numpy arrays for easier plotting
+        ks = np.array(ks)
+        alphas = np.array(alphas)
+        hs = np.array(hs)
+        precisions = np.array(precisions)
+        recalls = np.array(recalls)
+        f1_scores = np.array(f1_scores)
 
-    def plot_bus_performance(self, metric='F1 Score'):
-        centralized_df = self.df[self.df['method'] == 'Centralized']
-        plt.figure(figsize=(12, 6))
-        sns.boxplot(x='bus', y=metric, data=centralized_df)
-        plt.title(f'{metric} Comparison Across Buses')
-        plt.ylabel(metric)
-        plt.xlabel('Bus')
-        plt.xticks(rotation=45)
-        plt.savefig(f'bus_{metric.lower().replace(" ", "_")}_comparison.png')
-        plt.close()
+        # Create a scatter plot for Precision, Recall, and F1-Score
+        fig, ax = plt.subplots(1, 3, figsize=(18, 6))
+
+        scatter1 = ax[0].scatter(ks, alphas, c=precisions, cmap='viridis', s=100)
+        ax[0].set_title('Precision')
+        ax[0].set_xlabel('k')
+        ax[0].set_ylabel('alpha')
+        fig.colorbar(scatter1, ax=ax[0], label='Precision')
+
+        scatter2 = ax[1].scatter(ks, alphas, c=recalls, cmap='plasma', s=100)
+        ax[1].set_title('Recall')
+        ax[1].set_xlabel('k')
+        ax[1].set_ylabel('alpha')
+        fig.colorbar(scatter2, ax=ax[1], label='Recall')
+
+        scatter3 = ax[2].scatter(ks, alphas, c=f1_scores, cmap='coolwarm', s=100)
+        ax[2].set_title('F1-Score')
+        ax[2].set_xlabel('k')
+        ax[2].set_ylabel('alpha')
+        fig.colorbar(scatter3, ax=ax[2], label='F1-Score')
+
+        plt.show()
 
     def plot_roc_curve(self):
-        from sklearn.metrics import roc_curve, auc
-        
-        plt.figure(figsize=(10, 8))
-        for method in self.df['method'].unique():
-            method_df = self.df[self.df['method'] == method]
-            fpr = method_df['False Alarm Rate'].mean()
-            tpr = method_df['Detection Rate'].mean()
-            roc_auc = auc([0, fpr, 1], [0, tpr, 1])
-            
-            plt.plot([0, fpr, 1], [0, tpr, 1], label=f'{method} (AUC = {roc_auc:.2f})')
-        
-        plt.plot([0, 1], [0, 1], 'k--')
-        plt.xlim([0.0, 1.0])
-        plt.ylim([0.0, 1.05])
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.title('Receiver Operating Characteristic (ROC) Curve')
-        plt.legend(loc="lower right")
-        plt.savefig('roc_curve.png')
-        plt.close()
+        """
+        Plot ROC curves for the various configurations.
+        """
+        fig, ax = plt.subplots(figsize=(10, 8))
 
-    def generate_all_plots(self):
-        metrics = ['F1 Score', 'Average Detection Delay', 'False Alarm Rate', 'Detection Rate']
-        methods = ['Centralized', 'Method A', 'Method B']
-        parameters = ['window_size', 'k', 'alpha', 'h']
+        for (k, alpha, h), metrics in self.results.items():
+            true_labels = metrics['true_labels']
+            predicted_scores = metrics['predicted_scores']
 
-        for metric in metrics:
-            self.plot_performance_comparison(metric)
+            # Since predicted_scores are binary, we can use them directly
+            fpr, tpr, _ = roc_curve(true_labels, predicted_scores)
+            roc_auc = auc(fpr, tpr)
 
-        for method in methods:
-            for parameter in parameters:
-                self.plot_parameter_sensitivity(method, parameter)
+            ax.plot(fpr, tpr, lw=2, label=f'k={k}, alpha={alpha}, h={h} (AUC = {roc_auc:.2f})')
 
-        self.plot_heatmap('Method A', 'p', 'h')
-        self.plot_heatmap('Method B', 'aggregation_method', 'h')
+        ax.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+        ax.set_xlim([0.0, 1.0])
+        ax.set_ylim([0.0, 1.05])
+        ax.set_xlabel('False Positive Rate')
+        ax.set_ylabel('True Positive Rate')
+        ax.set_title('Receiver Operating Characteristic (ROC)')
+        ax.legend(loc='lower right')
 
-        self.plot_bus_performance()
-        self.plot_roc_curve()
+        plt.show()
 
+
+    def plot_parameter_sensitivity(self):
+        """
+        Plot the sensitivity of the detection performance to different parameters.
+        """
+        ks, alphas, hs = [], [], []
+        false_alarm_rates, detection_delays = [], []
+
+        for (k, alpha, h), metrics in self.results.items():
+            ks.append(k)
+            alphas.append(alpha)
+            hs.append(h)
+            false_alarm_rates.append(metrics['false_alarm_rate'])
+            detection_delays.append(metrics['detection_delay'])
+
+        # Convert lists to numpy arrays for easier plotting
+        ks = np.array(ks)
+        alphas = np.array(alphas)
+        hs = np.array(hs)
+        false_alarm_rates = np.array(false_alarm_rates)
+        detection_delays = np.array(detection_delays)
+
+        # Create a scatter plot for False Alarm Rate and Detection Delay
+        fig, ax = plt.subplots(1, 2, figsize=(12, 6))
+
+        scatter1 = ax[0].scatter(ks, alphas, c=false_alarm_rates, cmap='inferno', s=100)
+        ax[0].set_title('False Alarm Rate')
+        ax[0].set_xlabel('k')
+        ax[0].set_ylabel('alpha')
+        fig.colorbar(scatter1, ax=ax[0], label='False Alarm Rate')
+
+        scatter2 = ax[1].scatter(ks, alphas, c=detection_delays, cmap='cividis', s=100)
+        ax[1].set_title('Detection Delay')
+        ax[1].set_xlabel('k')
+        ax[1].set_ylabel('alpha')
+        fig.colorbar(scatter2, ax=ax[1], label='Detection Delay')
+
+        plt.show()
+
+# Example usage:
 if __name__ == "__main__":
-    visualizer = Visualizer()
-    visualizer.generate_all_plots()
-    print("All plots have been generated and saved.")
+    # Assume results is a dictionary containing the experiment results
+    results = {
+        (5, 0.01, 10): {
+            "classification_metrics": {"precision": 0.75, "recall": 0.85, "f1_score": 0.80, "accuracy": 0.90},
+            "detection_delay": 5,
+            "false_alarm_rate": 0.05,
+            "true_labels": np.array([0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 1]),
+            "predicted_scores": np.array([0.1, 0.2, 0.3, 0.8, 0.9, 0.2, 0.1, 0.4, 0.3, 0.2, 0.7])
+        },
+        (10, 0.05, 20): {
+            "classification_metrics": {"precision": 0.85, "recall": 0.80, "f1_score": 0.82, "accuracy": 0.88},
+            "detection_delay": 7,
+            "false_alarm_rate": 0.03,
+            "true_labels": np.array([0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 1]),
+            "predicted_scores": np.array([0.2, 0.3, 0.4, 0.9, 0.95, 0.3, 0.2, 0.5, 0.4, 0.3, 0.8])
+        }
+    }
+
+    # Initialize the Visualization class
+    visualizer = Visualization(results)
+
+    # Plot detection performance
+    visualizer.plot_detection_performance()
+
+    # Plot ROC curves
+    visualizer.plot_roc_curve()
+
+    # Plot parameter sensitivity
+    visualizer.plot_parameter_sensitivity()

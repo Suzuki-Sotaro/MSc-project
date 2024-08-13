@@ -9,7 +9,7 @@ results_dir = os.path.join('results', 'knn_outlier_detection')
 os.makedirs(results_dir, exist_ok=True)
 
 # Load data from the specified CSV file
-file_path = './data/A_LMPFreq3_Labeled.csv'
+file_path = './data/LMP.csv'
 data = pd.read_csv(file_path)
 
 # Specify bus numbers to analyze

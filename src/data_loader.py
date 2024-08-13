@@ -1,67 +1,61 @@
 import pandas as pd
-import numpy as np
 
 class DataLoader:
-    def __init__(self, file_path='./data/LMP.csv'):
+    def __init__(self, file_path):
         self.file_path = file_path
         self.data = None
-        self.selected_buses = [115, 116, 117, 118, 119, 121, 135, 139]
-        self.window_size = 855  # Last 855 values as suggested
 
     def load_data(self):
-        """Load the CSV file and perform initial preprocessing."""
-        self.data = pd.read_csv(self.file_path)
-        print(f"Data loaded. Shape: {self.data.shape}")
+        """
+        Load the data from the CSV file.
+        """
+        try:
+            self.data = pd.read_csv(self.file_path)
+            print(f"Data loaded successfully from {self.file_path}.")
+        except Exception as e:
+            print(f"An error occurred while loading the data: {e}")
+            raise
 
     def preprocess_data(self):
-        """Preprocess the data by selecting specific buses and time window."""
+        """
+        Preprocess the data.
+        - Extract the relevant buses specified in the professor's guidance.
+        - Filter the last 855 data points as required.
+        """
         if self.data is None:
-            raise ValueError("Data not loaded. Call load_data() first.")
+            raise ValueError("Data not loaded. Call load_data() before preprocessing.")
 
-        # Select specific buses
-        bus_columns = [f'Bus{i}' for i in self.selected_buses]
-        selected_data = self.data[['Week', 'Label'] + bus_columns]
+        # Extract the specified buses
+        buses = ['Bus115', 'Bus116', 'Bus117', 'Bus118', 'Bus119', 'Bus121', 'Bus135', 'Bus139']
+        columns_to_keep = ['Week', 'Label'] + buses
 
-        # Select the last 855 rows
-        selected_data = selected_data.tail(self.window_size)
+        if not all(bus in self.data.columns for bus in buses):
+            raise ValueError(f"Some of the specified buses are not in the dataset columns: {buses}")
 
-        # Reset index
-        selected_data = selected_data.reset_index(drop=True)
+        # Filter the relevant columns
+        self.data = self.data[columns_to_keep]
 
-        print(f"Preprocessed data shape: {selected_data.shape}")
-        return selected_data
+        # Keep the last 855 data points
+        self.data = self.data.tail(855)
 
-    def get_bus_data(self, bus_number):
-        """Get data for a specific bus."""
+        print(f"Data preprocessed successfully. {len(self.data)} rows remaining after filtering.")
+
+    def get_data(self):
+        """
+        Returns the preprocessed data.
+        """
         if self.data is None:
-            raise ValueError("Data not loaded. Call load_data() first.")
+            raise ValueError("Data not preprocessed. Call preprocess_data() before getting the data.")
+        return self.data
 
-        column_name = f'Bus{bus_number}'
-        if column_name not in self.data.columns:
-            raise ValueError(f"Bus {bus_number} not found in the dataset.")
-
-        return self.data[['Week', 'Label', column_name]].tail(self.window_size)
-
-    def get_all_selected_bus_data(self):
-        """Get data for all selected buses."""
-        if self.data is None:
-            raise ValueError("Data not loaded. Call load_data() first.")
-
-        return self.preprocess_data()
-
+# Example usage:
 if __name__ == "__main__":
-    # Test the DataLoader
-    loader = DataLoader()
-    loader.load_data()
-    processed_data = loader.preprocess_data()
+    file_path = './data/LMP.csv'
+    data_loader = DataLoader(file_path)
+    
+    data_loader.load_data()        # Load the data from the file
+    data_loader.preprocess_data()  # Preprocess the data as needed
+    processed_data = data_loader.get_data()  # Get the processed data
+    
+    # Print out a preview of the processed data
     print(processed_data.head())
-
-    # Example: Get data for Bus 115
-    bus_115_data = loader.get_bus_data(115)
-    print("\nBus 115 data:")
-    print(bus_115_data.head())
-
-    # Example: Get data for all selected buses
-    all_bus_data = loader.get_all_selected_bus_data()
-    print("\nAll selected bus data:")
-    print(all_bus_data.head())

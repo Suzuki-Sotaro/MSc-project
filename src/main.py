@@ -1,78 +1,45 @@
 # 以下はmain.pyのコードです。
-import os
-import json
 from experiment_runner import ExperimentRunner
-from visualization import Visualizer
-from performance_metrics import evaluate_performance
-
-def ensure_directory(directory):
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+from visualization import Visualization
 
 def main():
-    # Set up directories
-    results_dir = "results"
-    plots_dir = "plots"
-    ensure_directory(results_dir)
-    ensure_directory(plots_dir)
+    # Define the path to your data file and other experiment parameters
+    file_path = './data/LMP.csv'
+    buses = ['Bus115', 'Bus116', 'Bus117', 'Bus118', 'Bus119', 'Bus121', 'Bus135', 'Bus139']
+    k_values = [5, 10, 15]
+    alpha_values = [0.001, 0.01, 0.05]
+    h_values = [5, 10, 20]
+    p_values = [0.1, 0.2, 0.5, 0.7, 0.9]
 
-    # Run experiments
-    print("Running experiments...")
-    runner = ExperimentRunner()
-    all_results = runner.run_all_experiments()
+    # Initialize the experiment runner
+    experiment_runner = ExperimentRunner(file_path, buses, k_values, alpha_values, h_values, p_values)
 
-    # Save raw results
-    results_file = os.path.join(results_dir, "experiment_results.json")
-    with open(results_file, 'w') as f:
-        json.dump(all_results, f, indent=2)
-    print(f"Raw results saved to {results_file}")
+    # Run the k-NN experiment
+    print("Running k-NN experiment...")
+    knn_results = experiment_runner.run_knn_experiment()
 
-    # Analyze results
-    print("\nAnalyzing results...")
-    methods = ['Centralized', 'Method A', 'Method B']
-    metrics = ['F1 Score', 'Average Detection Delay', 'False Alarm Rate', 'Detection Rate']
+    # Run the decentralized methods experiment
+    print("Running decentralized methods experiment...")
+    method_a_results, method_b_results = experiment_runner.run_decentralized_experiment()
 
-    for method in methods:
-        method_results = [r for r in all_results if r['method'] == method]
-        print(f"\nBest results for {method}:")
-        for metric in metrics:
-            best_result = max(method_results, key=lambda x: x[metric])
-            print(f"  Best {metric}: {best_result[metric]:.4f}")
-            print(f"    Parameters: {', '.join([f'{k}={v}' for k, v in best_result.items() if k not in ['method'] + metrics])}")
+    # Save all results to a file
+    print("Saving results...")
+    experiment_runner.save_results(knn_results, method_a_results, method_b_results)
 
-    # Generate visualizations
-    print("\nGenerating visualizations...")
-    visualizer = Visualizer(results_file)
-    visualizer.generate_all_plots()
-    print(f"Plots saved in {plots_dir}")
+    # Initialize the visualization class with the k-NN results
+    print("Visualizing results...")
+    visualizer = Visualization(knn_results)
 
-    # Perform additional analysis
-    print("\nPerforming additional analysis...")
-    
-    # Compare centralized vs decentralized methods
-    centralized_results = [r for r in all_results if r['method'] == 'Centralized']
-    decentralized_results = [r for r in all_results if r['method'] in ['Method A', 'Method B']]
-    
-    centralized_f1 = sum(r['F1 Score'] for r in centralized_results) / len(centralized_results)
-    decentralized_f1 = sum(r['F1 Score'] for r in decentralized_results) / len(decentralized_results)
-    
-    print(f"Average F1 Score:")
-    print(f"  Centralized: {centralized_f1:.4f}")
-    print(f"  Decentralized: {decentralized_f1:.4f}")
+    # Plot detection performance metrics
+    visualizer.plot_detection_performance()
 
-    # Analyze the effect of window size
-    window_sizes = sorted(set(r['window_size'] for r in all_results))
-    print("\nEffect of window size on F1 Score:")
-    for size in window_sizes:
-        size_results = [r for r in all_results if r['window_size'] == size]
-        avg_f1 = sum(r['F1 Score'] for r in size_results) / len(size_results)
-        print(f"  Window size {size}: {avg_f1:.4f}")
+    # Plot ROC curves
+    visualizer.plot_roc_curve()
 
-    # Analyze the best performing bus for centralized method
-    best_bus = max(centralized_results, key=lambda x: x['F1 Score'])
-    print(f"\nBest performing bus: Bus {best_bus['bus']} with F1 Score: {best_bus['F1 Score']:.4f}")
+    # Plot parameter sensitivity analysis
+    visualizer.plot_parameter_sensitivity()
 
-    print("\nExperiment complete. Check the results and plots directories for detailed output.")
+    print("Experiment completed and results visualized.")
 
 if __name__ == "__main__":
     main()
