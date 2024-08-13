@@ -9,7 +9,7 @@ results_dir = os.path.join('results', 'knn_outlier_detection_optimized_v2')
 os.makedirs(results_dir, exist_ok=True)
 
 # Load data from the specified CSV file
-file_path = './data/A_LMPFreq3_Labeled.csv'
+file_path = './data/LMP.csv'
 data = pd.read_csv(file_path)
 
 # Specify bus numbers to analyze
@@ -34,6 +34,9 @@ def transform_time_series(data, d):
 # Example: Transform the time series into d-dimensional vectors (e.g., d = 3)
 d = 3
 transformed_data = {bus: transform_time_series(bus_data[bus], d) for bus in bus_numbers}
+
+# Adjust labels to match the length of transformed data
+adjusted_labels = labels[d-1:]  # Truncate the labels to match the transformed data length
 
 # Function to calculate k-NN distances
 def calculate_knn_distances(transformed_data, k):
@@ -87,7 +90,7 @@ for k in k_values:
             for bus in bus_numbers:
                 pred_labels = anomaly_detected[bus].astype(int)
 
-                cm, accuracy, precision, recall, f1 = evaluate_results(pred_labels, labels)
+                cm, accuracy, precision, recall, f1 = evaluate_results(pred_labels, adjusted_labels)
                 results.append({
                     'Bus': bus,
                     'k': k,
