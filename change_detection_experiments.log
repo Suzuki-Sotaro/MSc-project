@@ -1,0 +1,235 @@
+2024-08-14 15:36:22,990 - INFO - Starting main execution
+2024-08-14 15:40:03,994 - INFO - Starting main execution
+2024-08-14 15:42:06,302 - INFO - Starting main execution
+2024-08-14 15:42:26,169 - INFO - Starting visualization of results
+2024-08-14 15:42:27,565 - INFO - Data plot with changes created for GEM
+2024-08-14 15:42:30,896 - INFO - Data plot with changes created for Q-Q
+2024-08-14 15:42:31,334 - INFO - Performance comparison plot created
+2024-08-14 15:42:31,552 - INFO - Method A results plot created
+2024-08-14 15:42:31,889 - INFO - Method B results plot created
+2024-08-14 15:42:32,847 - INFO - Heatmap created: Data Heatmap
+2024-08-14 15:42:32,848 - INFO - Visualization of results completed
+2024-08-14 15:42:32,848 - INFO - Starting visualization of results
+2024-08-14 15:42:34,048 - INFO - Data plot with changes created for GEM
+2024-08-14 15:42:37,441 - INFO - Data plot with changes created for Q-Q
+2024-08-14 15:42:37,663 - INFO - Performance comparison plot created
+2024-08-14 15:42:37,884 - INFO - Method A results plot created
+2024-08-14 15:42:38,221 - INFO - Method B results plot created
+2024-08-14 15:42:39,162 - INFO - Heatmap created: Data Heatmap
+2024-08-14 15:42:39,162 - INFO - Visualization of results completed
+2024-08-14 15:42:39,192 - INFO - Main execution completed
+2024-08-14 15:54:40,459 - INFO - Starting main execution
+2024-08-14 15:55:00,804 - INFO - Starting visualization of results
+2024-08-14 15:55:02,201 - INFO - Data plot with changes created for GEM
+2024-08-14 15:55:05,534 - INFO - Data plot with changes created for Q-Q
+2024-08-14 15:55:09,070 - INFO - Data plot with changes created for Method A (p=0.1)
+2024-08-14 15:55:12,524 - INFO - Data plot with changes created for Method A (p=0.2)
+2024-08-14 15:55:16,058 - INFO - Data plot with changes created for Method A (p=0.5)
+2024-08-14 15:55:19,731 - INFO - Data plot with changes created for Method A (p=0.7)
+2024-08-14 15:55:23,254 - INFO - Data plot with changes created for Method A (p=0.9)
+2024-08-14 15:55:26,772 - INFO - Data plot with changes created for Method B (average, mean)
+2024-08-14 15:55:30,381 - INFO - Data plot with changes created for Method B (median, mean)
+2024-08-14 15:55:33,965 - INFO - Data plot with changes created for Method B (mad, mean)
+2024-08-14 15:55:37,672 - INFO - Data plot with changes created for Method B (average, min)
+2024-08-14 15:55:41,394 - INFO - Data plot with changes created for Method B (median, min)
+2024-08-14 15:55:44,986 - INFO - Data plot with changes created for Method B (mad, min)
+2024-08-14 15:55:48,725 - INFO - Data plot with changes created for Method B (average, max)
+2024-08-14 15:55:52,455 - INFO - Data plot with changes created for Method B (median, max)
+2024-08-14 15:55:56,181 - INFO - Data plot with changes created for Method B (mad, max)
+2024-08-14 15:55:59,933 - INFO - Data plot with changes created for Method B (average, median)
+2024-08-14 15:56:03,584 - INFO - Data plot with changes created for Method B (median, median)
+2024-08-14 15:56:07,476 - INFO - Data plot with changes created for Method B (mad, median)
+2024-08-14 15:56:07,877 - INFO - Performance comparison plot created
+2024-08-14 15:57:20,430 - INFO - Starting main execution
+2024-08-14 15:57:41,411 - INFO - Starting visualization of results
+2024-08-14 15:57:42,808 - INFO - Data plot with changes created for GEM
+2024-08-14 15:57:46,289 - INFO - Data plot with changes created for Q-Q
+2024-08-14 15:57:46,738 - INFO - Performance comparison plot created
+2024-08-14 15:57:46,977 - INFO - Method A results plot created
+2024-08-14 15:57:47,335 - INFO - Method B results plot created
+2024-08-14 15:57:48,326 - INFO - Heatmap created: Data Heatmap
+2024-08-14 15:57:48,326 - INFO - Visualization of results completed
+2024-08-14 15:57:48,326 - INFO - Starting visualization of results
+2024-08-14 15:57:49,608 - INFO - Data plot with changes created for GEM
+2024-08-14 15:57:53,099 - INFO - Data plot with changes created for Q-Q
+2024-08-14 15:57:53,340 - INFO - Performance comparison plot created
+2024-08-14 15:57:53,566 - INFO - Method A results plot created
+2024-08-14 15:57:53,942 - INFO - Method B results plot created
+2024-08-14 15:57:54,948 - INFO - Heatmap created: Data Heatmap
+2024-08-14 15:57:54,949 - INFO - Visualization of results completed
+2024-08-14 15:57:54,981 - INFO - Main execution completed
+2024-08-14 16:01:10,485 - INFO - Starting main execution
+2024-08-14 16:02:49,951 - INFO - Starting main execution
+2024-08-14 16:03:09,000 - INFO - Starting visualization of results
+2024-08-14 16:03:10,419 - INFO - Data plot with changes created for GEM
+2024-08-14 16:03:13,873 - INFO - Data plot with changes created for Q-Q
+2024-08-14 16:03:17,440 - INFO - Data plot with changes created for Method A (p=0.1)
+2024-08-14 16:03:20,988 - INFO - Data plot with changes created for Method A (p=0.2)
+2024-08-14 16:03:24,576 - INFO - Data plot with changes created for Method A (p=0.5)
+2024-08-14 16:03:28,373 - INFO - Data plot with changes created for Method A (p=0.7)
+2024-08-14 16:03:31,898 - INFO - Data plot with changes created for Method A (p=0.9)
+2024-08-14 16:03:35,523 - INFO - Data plot with changes created for Method B (mean, average)
+2024-08-14 16:03:39,084 - INFO - Data plot with changes created for Method B (mean, median)
+2024-08-14 16:03:42,610 - INFO - Data plot with changes created for Method B (mean, mad)
+2024-08-14 16:03:46,178 - INFO - Data plot with changes created for Method B (min, average)
+2024-08-14 16:03:49,755 - INFO - Data plot with changes created for Method B (min, median)
+2024-08-14 16:03:53,331 - INFO - Data plot with changes created for Method B (min, mad)
+2024-08-14 16:03:56,945 - INFO - Data plot with changes created for Method B (max, average)
+2024-08-14 16:04:00,510 - INFO - Data plot with changes created for Method B (max, median)
+2024-08-14 16:04:04,112 - INFO - Data plot with changes created for Method B (max, mad)
+2024-08-14 16:04:07,768 - INFO - Data plot with changes created for Method B (median, average)
+2024-08-14 16:04:11,272 - INFO - Data plot with changes created for Method B (median, median)
+2024-08-14 16:04:14,801 - INFO - Data plot with changes created for Method B (median, mad)
+2024-08-14 16:04:15,171 - INFO - Performance comparison plot created
+2024-08-14 16:09:18,910 - INFO - Starting main execution
+2024-08-14 16:09:39,424 - INFO - Data plot with changes created for GEM
+2024-08-14 16:09:42,866 - INFO - Data plot with changes created for Q-Q
+2024-08-14 16:09:46,517 - INFO - Data plot with changes created for Method A (p=0.1)
+2024-08-14 16:09:50,102 - INFO - Data plot with changes created for Method A (p=0.2)
+2024-08-14 16:09:53,741 - INFO - Data plot with changes created for Method A (p=0.5)
+2024-08-14 16:09:57,418 - INFO - Data plot with changes created for Method A (p=0.7)
+2024-08-14 16:10:01,018 - INFO - Data plot with changes created for Method A (p=0.9)
+2024-08-14 16:10:04,877 - INFO - Data plot with changes created for Method B (mean, average)
+2024-08-14 16:10:08,697 - INFO - Data plot with changes created for Method B (mean, median)
+2024-08-14 16:10:12,393 - INFO - Data plot with changes created for Method B (mean, mad)
+2024-08-14 16:10:16,030 - INFO - Data plot with changes created for Method B (min, average)
+2024-08-14 16:10:19,762 - INFO - Data plot with changes created for Method B (min, median)
+2024-08-14 16:10:23,370 - INFO - Data plot with changes created for Method B (min, mad)
+2024-08-14 16:10:27,055 - INFO - Data plot with changes created for Method B (max, average)
+2024-08-14 16:10:30,671 - INFO - Data plot with changes created for Method B (max, median)
+2024-08-14 16:10:34,347 - INFO - Data plot with changes created for Method B (max, mad)
+2024-08-14 16:10:38,054 - INFO - Data plot with changes created for Method B (median, average)
+2024-08-14 16:10:41,704 - INFO - Data plot with changes created for Method B (median, median)
+2024-08-14 16:10:45,391 - INFO - Data plot with changes created for Method B (median, mad)
+2024-08-14 16:10:45,780 - INFO - Performance comparison plot created
+2024-08-14 16:11:56,844 - INFO - Starting main execution
+2024-08-14 16:12:17,251 - INFO - Data plot with changes created for GEM
+2024-08-14 16:12:20,564 - INFO - Data plot with changes created for Q-Q
+2024-08-14 16:12:24,153 - INFO - Data plot with changes created for Method A (p=0.1)
+2024-08-14 16:12:27,776 - INFO - Data plot with changes created for Method A (p=0.2)
+2024-08-14 16:12:31,290 - INFO - Data plot with changes created for Method A (p=0.5)
+2024-08-14 16:12:34,907 - INFO - Data plot with changes created for Method A (p=0.7)
+2024-08-14 16:12:38,435 - INFO - Data plot with changes created for Method A (p=0.9)
+2024-08-14 16:12:42,010 - INFO - Data plot with changes created for Method B (mean, average)
+2024-08-14 16:12:45,539 - INFO - Data plot with changes created for Method B (mean, median)
+2024-08-14 16:12:49,064 - INFO - Data plot with changes created for Method B (mean, mad)
+2024-08-14 16:12:52,593 - INFO - Data plot with changes created for Method B (min, average)
+2024-08-14 16:12:56,261 - INFO - Data plot with changes created for Method B (min, median)
+2024-08-14 16:12:59,940 - INFO - Data plot with changes created for Method B (min, mad)
+2024-08-14 16:13:03,637 - INFO - Data plot with changes created for Method B (max, average)
+2024-08-14 16:13:07,253 - INFO - Data plot with changes created for Method B (max, median)
+2024-08-14 16:13:10,798 - INFO - Data plot with changes created for Method B (max, mad)
+2024-08-14 16:13:14,374 - INFO - Data plot with changes created for Method B (median, average)
+2024-08-14 16:13:17,801 - INFO - Data plot with changes created for Method B (median, median)
+2024-08-14 16:13:21,332 - INFO - Data plot with changes created for Method B (median, mad)
+2024-08-14 16:13:21,695 - INFO - Performance comparison plot created
+2024-08-14 16:14:57,854 - INFO - Starting main execution
+2024-08-14 16:15:18,699 - INFO - Data plot with changes created for GEM
+2024-08-14 16:15:22,105 - INFO - Data plot with changes created for Q-Q
+2024-08-14 16:15:25,675 - INFO - Data plot with changes created for Method A (p=0.1)
+2024-08-14 16:15:29,132 - INFO - Data plot with changes created for Method A (p=0.2)
+2024-08-14 16:15:32,895 - INFO - Data plot with changes created for Method A (p=0.5)
+2024-08-14 16:15:36,501 - INFO - Data plot with changes created for Method A (p=0.7)
+2024-08-14 16:15:39,920 - INFO - Data plot with changes created for Method A (p=0.9)
+2024-08-14 16:15:43,521 - INFO - Data plot with changes created for Method B (mean, average)
+2024-08-14 16:15:47,024 - INFO - Data plot with changes created for Method B (mean, median)
+2024-08-14 16:15:50,517 - INFO - Data plot with changes created for Method B (mean, mad)
+2024-08-14 16:15:54,018 - INFO - Data plot with changes created for Method B (min, average)
+2024-08-14 16:15:57,564 - INFO - Data plot with changes created for Method B (min, median)
+2024-08-14 16:16:01,148 - INFO - Data plot with changes created for Method B (min, mad)
+2024-08-14 16:16:04,859 - INFO - Data plot with changes created for Method B (max, average)
+2024-08-14 16:16:08,574 - INFO - Data plot with changes created for Method B (max, median)
+2024-08-14 16:16:12,157 - INFO - Data plot with changes created for Method B (max, mad)
+2024-08-14 16:16:15,920 - INFO - Data plot with changes created for Method B (median, average)
+2024-08-14 16:16:19,477 - INFO - Data plot with changes created for Method B (median, median)
+2024-08-14 16:16:23,030 - INFO - Data plot with changes created for Method B (median, mad)
+2024-08-14 16:16:23,402 - INFO - Performance comparison plot created
+2024-08-14 16:16:25,423 - INFO - Data plot with changes created for GEM
+2024-08-14 16:16:28,836 - INFO - Data plot with changes created for Q-Q
+2024-08-14 16:16:32,425 - INFO - Data plot with changes created for Method A (p=0.1)
+2024-08-14 16:16:36,051 - INFO - Data plot with changes created for Method A (p=0.2)
+2024-08-14 16:16:39,572 - INFO - Data plot with changes created for Method A (p=0.5)
+2024-08-14 16:16:43,146 - INFO - Data plot with changes created for Method A (p=0.7)
+2024-08-14 16:16:46,681 - INFO - Data plot with changes created for Method A (p=0.9)
+2024-08-14 16:16:50,254 - INFO - Data plot with changes created for Method B (mean, average)
+2024-08-14 16:16:53,794 - INFO - Data plot with changes created for Method B (mean, median)
+2024-08-14 16:16:57,360 - INFO - Data plot with changes created for Method B (mean, mad)
+2024-08-14 16:17:01,118 - INFO - Data plot with changes created for Method B (min, average)
+2024-08-14 16:17:04,831 - INFO - Data plot with changes created for Method B (min, median)
+2024-08-14 16:17:08,559 - INFO - Data plot with changes created for Method B (min, mad)
+2024-08-14 16:17:12,237 - INFO - Data plot with changes created for Method B (max, average)
+2024-08-14 16:17:15,769 - INFO - Data plot with changes created for Method B (max, median)
+2024-08-14 16:17:19,350 - INFO - Data plot with changes created for Method B (max, mad)
+2024-08-14 16:17:22,832 - INFO - Data plot with changes created for Method B (median, average)
+2024-08-14 16:17:26,519 - INFO - Data plot with changes created for Method B (median, median)
+2024-08-14 16:17:30,053 - INFO - Data plot with changes created for Method B (median, mad)
+2024-08-14 16:17:30,410 - INFO - Performance comparison plot created
+2024-08-14 16:17:31,032 - INFO - Main execution completed
+2024-08-14 16:22:24,892 - INFO - Starting main execution
+2024-08-14 16:22:46,063 - INFO - Data plot with changes created for GEM
+2024-08-14 16:22:49,407 - INFO - Data plot with changes created for Q-Q
+2024-08-14 16:22:52,903 - INFO - Data plot with changes created for Method A (p=0.1)
+2024-08-14 16:22:56,403 - INFO - Data plot with changes created for Method A (p=0.2)
+2024-08-14 16:23:00,117 - INFO - Data plot with changes created for Method A (p=0.5)
+2024-08-14 16:23:03,915 - INFO - Data plot with changes created for Method A (p=0.7)
+2024-08-14 16:23:07,539 - INFO - Data plot with changes created for Method A (p=0.9)
+2024-08-14 16:23:11,223 - INFO - Data plot with changes created for Method B (mean, average)
+2024-08-14 16:23:14,940 - INFO - Data plot with changes created for Method B (mean, median)
+2024-08-14 16:23:18,645 - INFO - Data plot with changes created for Method B (mean, mad)
+2024-08-14 16:23:22,307 - INFO - Data plot with changes created for Method B (min, average)
+2024-08-14 16:23:25,984 - INFO - Data plot with changes created for Method B (min, median)
+2024-08-14 16:23:29,626 - INFO - Data plot with changes created for Method B (min, mad)
+2024-08-14 16:23:33,288 - INFO - Data plot with changes created for Method B (max, average)
+2024-08-14 16:23:36,883 - INFO - Data plot with changes created for Method B (max, median)
+2024-08-14 16:23:40,514 - INFO - Data plot with changes created for Method B (max, mad)
+2024-08-14 16:23:44,204 - INFO - Data plot with changes created for Method B (median, average)
+2024-08-14 16:23:47,871 - INFO - Data plot with changes created for Method B (median, median)
+2024-08-14 16:23:51,737 - INFO - Data plot with changes created for Method B (median, mad)
+2024-08-14 16:23:52,131 - INFO - Performance comparison plot created
+2024-08-14 16:23:54,211 - INFO - Data plot with changes created for GEM
+2024-08-14 16:23:57,787 - INFO - Data plot with changes created for Q-Q
+2024-08-14 16:24:01,667 - INFO - Data plot with changes created for Method A (p=0.1)
+2024-08-14 16:24:05,337 - INFO - Data plot with changes created for Method A (p=0.2)
+2024-08-14 16:24:09,057 - INFO - Data plot with changes created for Method A (p=0.5)
+2024-08-14 16:24:12,732 - INFO - Data plot with changes created for Method A (p=0.7)
+2024-08-14 16:24:16,508 - INFO - Data plot with changes created for Method A (p=0.9)
+2024-08-14 16:24:20,230 - INFO - Data plot with changes created for Method B (mean, average)
+2024-08-14 16:24:24,079 - INFO - Data plot with changes created for Method B (mean, median)
+2024-08-14 16:24:27,856 - INFO - Data plot with changes created for Method B (mean, mad)
+2024-08-14 16:24:31,600 - INFO - Data plot with changes created for Method B (min, average)
+2024-08-14 16:24:35,317 - INFO - Data plot with changes created for Method B (min, median)
+2024-08-14 16:24:39,128 - INFO - Data plot with changes created for Method B (min, mad)
+2024-08-14 16:24:42,910 - INFO - Data plot with changes created for Method B (max, average)
+2024-08-14 16:24:46,594 - INFO - Data plot with changes created for Method B (max, median)
+2024-08-14 16:24:50,285 - INFO - Data plot with changes created for Method B (max, mad)
+2024-08-14 16:24:54,015 - INFO - Data plot with changes created for Method B (median, average)
+2024-08-14 16:24:57,740 - INFO - Data plot with changes created for Method B (median, median)
+2024-08-14 16:25:01,564 - INFO - Data plot with changes created for Method B (median, mad)
+2024-08-14 16:25:02,232 - INFO - Performance comparison plot created
+2024-08-14 16:25:02,881 - INFO - Main execution completed
+2024-08-14 16:28:08,392 - INFO - Starting main execution
+2024-08-14 16:28:34,102 - INFO - Data plot with changes created for GEM
+2024-08-14 16:28:37,502 - INFO - Data plot with changes created for Q-Q
+2024-08-14 16:28:41,224 - INFO - Data plot with changes created for Method A (p=0.3)
+2024-08-14 16:28:44,815 - INFO - Data plot with changes created for Method A (p=0.5)
+2024-08-14 16:28:48,416 - INFO - Data plot with changes created for Method A (p=0.7)
+2024-08-14 16:28:52,230 - INFO - Data plot with changes created for Method B (mean, average)
+2024-08-14 16:28:56,015 - INFO - Data plot with changes created for Method B (mean, median)
+2024-08-14 16:28:59,575 - INFO - Data plot with changes created for Method B (mean, mad)
+2024-08-14 16:29:03,283 - INFO - Data plot with changes created for Method B (median, average)
+2024-08-14 16:29:06,925 - INFO - Data plot with changes created for Method B (median, median)
+2024-08-14 16:29:10,622 - INFO - Data plot with changes created for Method B (median, mad)
+2024-08-14 16:29:10,943 - INFO - Performance comparison plot created
+2024-08-14 16:29:12,390 - INFO - Data plot with changes created for GEM
+2024-08-14 16:29:15,860 - INFO - Data plot with changes created for Q-Q
+2024-08-14 16:29:19,589 - INFO - Data plot with changes created for Method A (p=0.3)
+2024-08-14 16:29:23,134 - INFO - Data plot with changes created for Method A (p=0.5)
+2024-08-14 16:29:26,860 - INFO - Data plot with changes created for Method A (p=0.7)
+2024-08-14 16:29:30,607 - INFO - Data plot with changes created for Method B (mean, average)
+2024-08-14 16:29:34,325 - INFO - Data plot with changes created for Method B (mean, median)
+2024-08-14 16:29:38,046 - INFO - Data plot with changes created for Method B (mean, mad)
+2024-08-14 16:29:41,677 - INFO - Data plot with changes created for Method B (median, average)
+2024-08-14 16:29:45,332 - INFO - Data plot with changes created for Method B (median, median)
+2024-08-14 16:29:48,994 - INFO - Data plot with changes created for Method B (median, mad)
+2024-08-14 16:29:49,321 - INFO - Performance comparison plot created
+2024-08-14 16:29:50,214 - INFO - Main execution completed

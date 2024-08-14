@@ -1,77 +1,46 @@
-# 以下はconfig.pyのコード
-# Configuration for synthetic data experiment
-synthetic_config = {
-    'n_channels': 8,
-    'n_samples': 1000,
-    'mean': 0,
-    'variance': 1,
-    'theta': 0.5,
-    'change_point': 200,
-    'new_mean': 2,
-    'new_variance': 1.5,
-    'reference_window_size': 100,
-    'test_window_size': 50,
-    'detection_method': 'B',
-    'threshold': 5,
-    'voting_threshold': 0.5,
-    'aggregation_method': 'mean'
-}
+# config.py
 
-# Configuration for real data experiment
-real_config = {
-    'file_path': './data/LMP.csv',
-    'bus_numbers': [115, 116, 117, 118, 119, 121, 135, 139],
-    'num_samples': 855,
-    'reference_window_size': 100,
-    'test_window_size': 50,
-    'detection_method': 'B',
-    'threshold': 5,
-    'voting_threshold': 0.5,
-    'aggregation_method': 'mean'
-}
+# Data loading parameters
+DATA_PATH = './data/LMP.csv'
+SELECTED_BUSES = [115, 116, 117, 118, 119, 121, 135, 139]
 
-# Parameter ranges for sensitivity analysis
-param_ranges = {
-    'reference_window_size': [1, 5, 10, 20, 50],
-    'test_window_size': [1, 2, 5, 10, 20],
-    'threshold': [0.001, 0.01, 0.1, 1, 10],
-    'voting_threshold': [0.01, 0.1, 0.3, 0.5, 0.9]
-}
+# Data preprocessing parameters
+WINDOW_SIZE = 24  # 1 day
+STEP_SIZE = 1  # Move 1 hour at a time
 
-# General configuration
-general_config = {
-    'random_seed': 42,
-    'num_monte_carlo_runs': 100,
-    'confidence_level': 0.95
-}
+# config.py
+GEM_K = 5  # この値は変更せずに保持
+GEM_ALPHA = 0.01  # 0.1から0.01に変更
+GEM_H = 20  # 10から20に変更
 
-# Visualization configuration
-viz_config = {
-    'figure_size': (12, 8),
-    'font_size': 12,
-    'line_width': 2,
-    'marker_size': 6
-}
+QQ_WINDOW_SIZE = 100  # 50から100に変更
+QQ_H = 10  # 5から10に変更
 
-# File paths
-file_paths = {
-    'results_dir': './results/',
-    'figures_dir': './figures/',
-    'log_file': './experiment.log'
-}
+METHOD_A_P_VALUES = [0.3, 0.5, 0.7]  # 値の範囲を狭める
 
-# Performance metrics configuration
-metrics_config = {
-    'detection_delay_tolerance': 10,  # samples
-    'false_alarm_rate_threshold': 0.05
-}
+METHOD_B_H_METHODS = ['mean', 'median']  # 'min'と'max'を除外
+METHOD_B_MAD_THRESHOLD = 2.5  # 3.5から2.5に変更
 
-# Method-specific configurations
-method_a_config = {
-    'voting_schemes': ['at_least_one', 'all_buses', 'majority']
-}
+# Performance evaluation parameters
+DETECTION_TOLERANCE = 5  # Tolerance window for matching true and detected changes
 
-method_b_config = {
-    'aggregation_functions': ['mean', 'median', 'mad'],
-    'sink_threshold_options': ['average', 'minimum', 'maximum', 'median']
-}
+# Visualization parameters
+PLOT_FIGSIZE = (12, 6)
+
+# Random seed for reproducibility
+RANDOM_SEED = 42
+
+# Experiment settings
+N_EXPERIMENTS = 10  # Number of experiments to run for each configuration
+
+# Logging settings
+LOG_LEVEL = 'INFO'
+LOG_FILE = 'change_detection_experiments.log'
+
+# Result storage
+RESULTS_DIR = './results'
+
+# Debug mode flag
+DEBUG = False
+
+# Add any other configuration parameters you need for your project here
