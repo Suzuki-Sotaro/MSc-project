@@ -1,78 +1,75 @@
 # 以下はmain.pyのコードです。
-import os
-import json
-from experiment_runner import ExperimentRunner
-from visualization import Visualizer
-from performance_metrics import evaluate_performance
+from typing import Dict, List, Tuple
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from experiment_runner import run_synthetic_data_experiment, run_real_data_experiment, run_parameter_sensitivity_analysis
+from performance_evaluation import plot_roc_curve, plot_detection_delay_distribution, plot_parameter_sensitivity
+from config import synthetic_config, real_config, param_ranges
 
-def ensure_directory(directory):
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+def run_all_experiments():
+    """
+    Run all experiments and analyze results.
+    """
+    print("Running Synthetic Data Experiment...")
+    synthetic_results = run_synthetic_data_experiment(synthetic_config)
+    print("Synthetic Data Results:")
+    print(synthetic_results)
+
+    print("\nRunning Real Data Experiment...")
+    real_results = run_real_data_experiment(real_config)
+    print("Real Data Results:")
+    print(real_results)
+
+    print("\nRunning Parameter Sensitivity Analysis...")
+    sensitivity_results = run_parameter_sensitivity_analysis(synthetic_config, param_ranges)
+    print("Parameter Sensitivity Analysis Results:")
+    print(sensitivity_results)
+
+    return synthetic_results, real_results, sensitivity_results
+
+def analyze_results(synthetic_results, real_results, sensitivity_results):
+    """
+    Analyze and visualize the results.
+    """
+    # Analyze synthetic data results
+    print("\nSynthetic Data Analysis:")
+    print(f"Change detected: {synthetic_results['change_detected']}")
+    print(f"Detected change point: {synthetic_results['detected_change_point']}")
+    print(f"Performance metrics: {synthetic_results['metrics']}")
+
+    # Analyze real data results
+    print("\nReal Data Analysis:")
+    print(f"Change detected: {real_results['change_detected']}")
+    print(f"Detected change point: {real_results['detected_change_point']}")
+    print(f"Performance metrics: {real_results['metrics']}")
+
+    print("\nParameter Sensitivity Analysis:")
+    for param, results in sensitivity_results.items():
+        print(f"\n{param}:")
+        for result in results:
+            print(f"  Value: {result['value']}")
+            print(f"    Detection Delay: {result['metrics']['detection_delay']}")
+            print(f"    False Alarm Rate: {result['metrics']['false_alarm_rate']}")
+            print(f"    Detection Accuracy: {result['metrics']['detection_accuracy']}")
+            print(f"    Missed Detection: {result['metrics']['missed_detection']}")
+
+    # Generate ROC curve (example - you may need to adjust this based on your actual results)
+    true_positives = [result['metrics']['detection_accuracy'] for result in sensitivity_results['threshold']]
+    false_positives = [result['metrics']['false_alarm_rate'] for result in sensitivity_results['threshold']]
+    plot_roc_curve(true_positives, false_positives)
+
+    # Plot detection delay distribution (example - you may need to adjust this based on your actual results)
+    delays = [result['metrics']['detection_delay'] for result in sensitivity_results['threshold'] if result['metrics']['detection_delay'] != np.inf]
+    plot_detection_delay_distribution(delays)
+    
 
 def main():
-    # Set up directories
-    results_dir = "results"
-    plots_dir = "plots"
-    ensure_directory(results_dir)
-    ensure_directory(plots_dir)
-
-    # Run experiments
-    print("Running experiments...")
-    runner = ExperimentRunner()
-    all_results = runner.run_all_experiments()
-
-    # Save raw results
-    results_file = os.path.join(results_dir, "experiment_results.json")
-    with open(results_file, 'w') as f:
-        json.dump(all_results, f, indent=2)
-    print(f"Raw results saved to {results_file}")
-
-    # Analyze results
-    print("\nAnalyzing results...")
-    methods = ['Centralized', 'Method A', 'Method B']
-    metrics = ['F1 Score', 'Average Detection Delay', 'False Alarm Rate', 'Detection Rate']
-
-    for method in methods:
-        method_results = [r for r in all_results if r['method'] == method]
-        print(f"\nBest results for {method}:")
-        for metric in metrics:
-            best_result = max(method_results, key=lambda x: x[metric])
-            print(f"  Best {metric}: {best_result[metric]:.4f}")
-            print(f"    Parameters: {', '.join([f'{k}={v}' for k, v in best_result.items() if k not in ['method'] + metrics])}")
-
-    # Generate visualizations
-    print("\nGenerating visualizations...")
-    visualizer = Visualizer(results_file)
-    visualizer.generate_all_plots()
-    print(f"Plots saved in {plots_dir}")
-
-    # Perform additional analysis
-    print("\nPerforming additional analysis...")
-    
-    # Compare centralized vs decentralized methods
-    centralized_results = [r for r in all_results if r['method'] == 'Centralized']
-    decentralized_results = [r for r in all_results if r['method'] in ['Method A', 'Method B']]
-    
-    centralized_f1 = sum(r['F1 Score'] for r in centralized_results) / len(centralized_results)
-    decentralized_f1 = sum(r['F1 Score'] for r in decentralized_results) / len(decentralized_results)
-    
-    print(f"Average F1 Score:")
-    print(f"  Centralized: {centralized_f1:.4f}")
-    print(f"  Decentralized: {decentralized_f1:.4f}")
-
-    # Analyze the effect of window size
-    window_sizes = sorted(set(r['window_size'] for r in all_results))
-    print("\nEffect of window size on F1 Score:")
-    for size in window_sizes:
-        size_results = [r for r in all_results if r['window_size'] == size]
-        avg_f1 = sum(r['F1 Score'] for r in size_results) / len(size_results)
-        print(f"  Window size {size}: {avg_f1:.4f}")
-
-    # Analyze the best performing bus for centralized method
-    best_bus = max(centralized_results, key=lambda x: x['F1 Score'])
-    print(f"\nBest performing bus: Bus {best_bus['bus']} with F1 Score: {best_bus['F1 Score']:.4f}")
-
-    print("\nExperiment complete. Check the results and plots directories for detailed output.")
+    """
+    Main function to run all experiments and analyze results.
+    """
+    synthetic_results, real_results, sensitivity_results = run_all_experiments()
+    analyze_results(synthetic_results, real_results, sensitivity_results)
 
 if __name__ == "__main__":
     main()
