@@ -1,3 +1,4 @@
+# 以下はweek1_cusum_1.pyの改良版です。
 import numpy as np
 import matplotlib.pyplot as plt
 

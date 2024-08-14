@@ -1,5 +1,4 @@
-
-
+# 以下はweek1_change_detection.pyの内容です
 import numpy as np
 import matplotlib.pyplot as plt
 
