@@ -1,3 +1,4 @@
+# 以下はmethod_b.pyの内容です。
 import os
 import numpy as np
 import pandas as pd

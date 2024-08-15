@@ -64,6 +64,10 @@ def cusum_algorithm(statistics, h):
     return np.array(anomalies)
 
 # Function to evaluate results
+# Adjust the length of the labels to match the transformed data
+adjusted_labels = labels[d-1:]  # Truncate the first (d-1) labels
+
+# Function to evaluate results
 def evaluate_results(pred_labels, true_labels):
     cm = confusion_matrix(true_labels, pred_labels)
     accuracy = accuracy_score(true_labels, pred_labels)
@@ -73,9 +77,9 @@ def evaluate_results(pred_labels, true_labels):
     return cm, accuracy, precision, recall, f1
 
 # Experiment with different parameters
-k_values = [10, 15, 20]  # Adjust k to be larger for more robust detection
-alpha_values = [0.01, 0.05, 0.1]  # Use a range of alpha to explore different thresholds
-h_values = [10, 20, 30]  # Adjust the CUSUM threshold h
+k_values = [10, 15, 20]
+alpha_values = [0.01, 0.05, 0.1]
+h_values = [10, 20, 30]
 
 best_results = []
 
@@ -85,11 +89,16 @@ for k in k_values:
             outliers = {bus: detect_outliers(calculate_knn_distances(transformed_data[bus], k), alpha) for bus in bus_numbers}
             anomaly_detected = {bus: cusum_algorithm(outliers[bus], h) for bus in bus_numbers}
 
-            # Apply the evaluation for each bus
             results = []
             for bus in bus_numbers:
                 pred_labels = anomaly_detected[bus].astype(int)
 
+<<<<<<< HEAD:src/week10_knn_anomaly_detection_optimized.py
+=======
+                # Truncate labels to match the length of pred_labels
+                adjusted_labels = labels[d-1:]
+                
+>>>>>>> チャットG:src/temp/week10_knn_anomaly_detection_optimized.py
                 cm, accuracy, precision, recall, f1 = evaluate_results(pred_labels, adjusted_labels)
                 results.append({
                     'Bus': bus,
