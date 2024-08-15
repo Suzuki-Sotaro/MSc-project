@@ -1,4 +1,4 @@
-# 以下はqq_detection.pyのコードです。
+# The following is the code for qq_detection.py.
 import numpy as np
 import pandas as pd
 
@@ -17,7 +17,7 @@ def calculate_qq_distance(window1, window2):
     qq_distance = np.sqrt(2) / 2 * np.mean(np.abs(q_window1 - q_window2))
     return qq_distance
 
-# Q-Q距離を計算して変更を検知する関数
+# Function to calculate Q-Q distance and detect changes.
 def qq_detection(data, buses, window_size, threshold):
     results = []
     n_windows = len(data) - window_size + 1
