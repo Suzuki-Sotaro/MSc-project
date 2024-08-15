@@ -1,4 +1,4 @@
-# 以下はcusum_detection.pyの内容です
+# Below is the content of cusum_detection.py
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_auc_score
@@ -60,7 +60,7 @@ def run_experiments(mean_before, sigma_before, mean_after, sigma_after, change_p
     
     return avg_detection_delays, false_alarm_rates
 
-def plot_results(data, change_point, cusum_scores, detection_points, threshold_values):
+def plot_results(data, change_point, cusum_scores, detection_points, threshold_values, method_name, save_path=None):
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8), sharex=True)
 
     ax1.plot(data, label='Data')
@@ -74,16 +74,22 @@ def plot_results(data, change_point, cusum_scores, detection_points, threshold_v
 
     ax1.set_xlabel('Sample')
     ax1.set_ylabel('Value')
-    ax1.set_title('CuSum Change Detection')
+    ax1.set_title(f'{method_name} Change Detection')
     ax1.legend()
 
     ax2.set_xlabel('Sample')
     ax2.set_ylabel('CuSum Score')
-    ax2.set_title('CuSum Scores')
+    ax2.set_title(f'{method_name} Scores')
     ax2.legend()
 
     plt.tight_layout()
-    # plt.show()
+
+    # Save plot to file if save_path is provided
+    if save_path:
+        plt.savefig(save_path)
+    else:
+        plt.show()
+
 
 def sensitivity_analysis(mean_values, sigma_values, change_point, n_samples, threshold_values, num_experiments):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))

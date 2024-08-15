@@ -1,61 +1,51 @@
+# below is the implementation of method A
 import numpy as np
 import pandas as pd
-from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
-# Function to execute non-parametric CuSum
-def calculate_cusum(data, window_size, threshold):
-    n = len(data)
-    reference_window = data[:window_size]
-    cusum = np.zeros(n)
-    for t in range(window_size, n):
-        test_window = data[t-window_size:t]
-        distance = np.abs(np.mean(reference_window) - np.mean(test_window))
-        cusum[t] = cusum[t-1] + distance
-        if cusum[t] > threshold:
-            return t, cusum  # Detect change point
-    return -1, cusum  # No change point detected
+def learn_local_threshold(data, labels, window_size):
+    best_threshold = 0
+    best_f1 = 0
+    for threshold in np.arange(0.1, 5.0, 0.1):
+        changes = detect_local_change(data, window_size, threshold)
+        f1 = f1_score(labels[window_size:], changes)
+        if f1 > best_f1:
+            best_f1 = f1
+            best_threshold = threshold
+    return best_threshold
 
-# Method A - Analyze using voting scheme
+def detect_local_change(data, window_size, threshold):
+    changes = np.zeros(len(data) - window_size)
+    for i in range(window_size, len(data)):
+        if abs(np.mean(data[i-window_size:i]) - np.mean(data[i-window_size*2:i-window_size])) > threshold:
+            changes[i-window_size] = 1
+    return changes
+
 def analyze_method_a(df, buses, window_size, p_values):
     results = []
-    labels = df['Label'].values
+    labels = df['Label'].values[window_size:]
     bus_data = {bus: df[bus].values for bus in buses}
 
-    # Optimize local threshold h[k] for each bus
-    local_thresholds = {}
-    for bus in buses:
-        best_threshold = 10  # Initial threshold
-        best_f1_score = 0
-        for threshold in range(1, 20):
-            change_point, cusum = calculate_cusum(bus_data[bus], window_size, threshold)
-            pred_labels = np.zeros(len(labels))
-            if change_point != -1:
-                pred_labels[change_point:] = 1
-            f1 = f1_score(labels, pred_labels)
-            if f1 > best_f1_score:
-                best_f1_score = f1
-                best_threshold = threshold
-        local_thresholds[bus] = best_threshold
+    # Learn local thresholds using initial data
+    local_thresholds = {bus: learn_local_threshold(bus_data[bus][:len(bus_data[bus])//2], 
+                                                   df['Label'].values[:len(bus_data[bus])//2], 
+                                                   window_size) for bus in buses}
 
-    # Voting scheme implementation
-    for p in p_values:
+    voting_schemes = ['at_least_one', 'all_buses'] + [f'p_{p}' for p in p_values]
+    
+    for scheme in voting_schemes:
         votes = np.zeros(len(labels))
-        detection_times = []
         for bus in buses:
-            threshold = local_thresholds[bus]
-            change_point, cusum = calculate_cusum(bus_data[bus], window_size, threshold)
-            if change_point != -1:
-                votes[change_point:] += 1
+            changes = detect_local_change(bus_data[bus], window_size, local_thresholds[bus])
+            votes += changes
 
-        for t in range(len(votes)):
-            if votes[t] >= p * len(buses):
-                detection_times.append(t)
-                break
-
-        if detection_times:
-            detection_time = detection_times[0]
+        if scheme == 'at_least_one':
+            detection_time = np.argmax(votes > 0) if np.any(votes > 0) else -1
+        elif scheme == 'all_buses':
+            detection_time = np.argmax(votes == len(buses)) if np.any(votes == len(buses)) else -1
         else:
-            detection_time = -1
+            p = float(scheme.split('_')[1])
+            detection_time = np.argmax(votes >= p * len(buses)) if np.any(votes >= p * len(buses)) else -1
 
         pred_labels = np.zeros(len(labels))
         if detection_time != -1:
@@ -67,7 +57,7 @@ def analyze_method_a(df, buses, window_size, p_values):
         f1 = f1_score(labels, pred_labels)
 
         results.append({
-            'p': p,
+            'Voting Scheme': scheme,
             'Detection Time': detection_time,
             'Accuracy': accuracy,
             'Precision': precision,
