@@ -27,8 +27,8 @@ To set up the environment, follow these steps:
 
 1. **Clone the repository:**
     ```bash
-    git clone https://github.com/username/masters-thesis-project.git
-    cd masters-thesis-project
+    git clone https://github.com/username/msc-project.git
+    cd msc-project
     ```
 
 2. **Create a virtual environment:**
