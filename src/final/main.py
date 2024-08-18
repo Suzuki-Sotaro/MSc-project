@@ -8,7 +8,7 @@ from glr_detection import glr_detect, plot_glr_results  # Import GLR
 from qq_detection import qq_detection  # Import Q-Q distance
 from method_a import analyze_method_a  # Import Method A
 from method_b import analyze_method_b  # Import Method B  
-from knn_detection import analyze_knn  # Import KNN
+from gem_detection import analyze_gem  # Import GEM
 
 # Load and preprocess the data
 def load_and_preprocess_data(file_path, buses, n_samples):
@@ -175,10 +175,10 @@ def save_results(results, output_dir, filename):
     output_path = os.path.join(output_dir, filename)
     results.to_csv(output_path, index=False)
 
-# Change detection and evaluation using KNN
-def analyze_knn_results(df, buses, d, k_values, alpha_values, h_values):
-    knn_results = analyze_knn(df, buses, d, k_values, alpha_values, h_values)
-    return knn_results
+# Change detection and evaluation using GEM
+def analyze_gem_results(df, buses, d, k_values, alpha_values, h_values):
+    gem_results = analyze_gem(df, buses, d, k_values, alpha_values, h_values)
+    return gem_results
 
 def generate_summary_table(method_results_dict):
     summary_df = pd.DataFrame()
@@ -237,13 +237,13 @@ def main():
     method_b_results = analyze_method_b_results(df, buses, window_size)
     save_results(method_b_results, './results/table/', 'method_b_analysis_results.csv')
 
-    # Change detection and evaluation using KNN
+    # Change detection and evaluation using GEM
     d = 3  # Transform to d-dimensions
     k_values = [10, 15, 20]
-    alpha_values = [0.01, 0.05, 0.1]
-    h_values = [10, 20, 30]
-    knn_results = analyze_knn_results(df, buses, d, k_values, alpha_values, h_values)
-    save_results(knn_results, './results/table/', 'knn_analysis_results.csv')
+    alpha_values = [0.01, 0.05, 0.1, 1, 5, 10]
+    h_values = [1, 5, 10, 20, 30]
+    gem_results = analyze_gem_results(df, buses, d, k_values, alpha_values, h_values)
+    save_results(gem_results, './results/table/', 'gem_analysis_results.csv')
     
     # Collecting results
     method_results_dict = {
@@ -252,7 +252,7 @@ def main():
         'Q-Q': qq_results_df,
         'Method A': method_a_results,
         'Method B': method_b_results,
-        'KNN': knn_results
+        'GEM': gem_results
     }
     
     # Generate and save summary table
