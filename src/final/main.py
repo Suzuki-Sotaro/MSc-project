@@ -21,12 +21,6 @@ def save_results(results, output_dir, filename):
     output_path = os.path.join(output_dir, filename)
     results.to_csv(output_path, index=False)
 
-def analyze_method_results(method, df, buses, window_size, p_values=None):
-    if method == 'A':
-        return analyze_method_a(df, buses, window_size, p_values)
-    elif method == 'B':
-        return analyze_method_b(df, buses, window_size)
-
 def main():
     file_path = './data/LMP.csv'
     buses = ['Bus115', 'Bus116', 'Bus117', 'Bus118', 'Bus119', 'Bus121', 'Bus135', 'Bus139']
@@ -73,15 +67,7 @@ def main():
     glr_results, glr_individual_results = analyze_glr(df, buses, statistics, glr_threshold_values)
     save_results(glr_results, './results/table/', 'glr_analysis_results.csv')
     save_results(glr_individual_results, './results/table/', 'glr_analysis_results_individual_buses.csv')
-
-    # Method A analysis
-    method_a_results = analyze_method_results('A', df, buses, window_size, p_values)
-    save_results(method_a_results, './results/table/', 'method_a_analysis_results.csv')
-
-    # Method B analysis
-    method_b_results = analyze_method_results('B', df, buses, window_size)
-    save_results(method_b_results, './results/table/', 'method_b_analysis_results.csv')
-
+    
     # GEM analysis using Method A and B
     p_values = [0.1, 0.2, 0.5, 0.7, 0.9]
     aggregation_methods = ['average', 'median', 'outlier_detection']
