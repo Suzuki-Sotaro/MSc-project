@@ -125,6 +125,7 @@ def method_b(bus_statistics, aggregation_methods, sink_threshold_methods):
 def qq_detection(df, buses, window_size, p_values, aggregation_methods, sink_threshold_methods):
     bus_changes = {}
     bus_statistics = {}
+    individual_bus_results = []
     
     # Learn local thresholds and detect changes for each bus
     for bus in buses:
@@ -137,6 +138,27 @@ def qq_detection(df, buses, window_size, p_values, aggregation_methods, sink_thr
         changes = detect_local_change(data, window_size, local_threshold)
         bus_changes[bus] = changes
         bus_statistics[bus] = np.cumsum(changes)
+
+        # Calculate individual bus performance
+        min_length = min(len(labels[window_size * 2 - 1:]), len(changes))
+        labels_truncated = labels[window_size * 2 - 1:][:min_length]
+        changes_truncated = changes[:min_length]
+        
+        accuracy = accuracy_score(labels_truncated, changes_truncated)
+        precision = precision_score(labels_truncated, changes_truncated)
+        recall = recall_score(labels_truncated, changes_truncated)
+        f1 = f1_score(labels_truncated, changes_truncated)
+        
+        individual_bus_results.append({
+            'Bus': bus,
+            'Method': 'Individual Q-Q',
+            'Threshold': local_threshold,
+            'Accuracy': accuracy,
+            'Precision': precision,
+            'Recall': recall,
+            'F1 Score': f1,
+            'Detection Time': np.argmax(changes) if np.any(changes) else -1
+        })
     
     # Apply Method A
     method_a_results = method_a(bus_changes, p_values)
@@ -168,4 +190,6 @@ def qq_detection(df, buses, window_size, p_values, aggregation_methods, sink_thr
         })
     
     # method_a_resultsとmethod_b_resultsでChangesの列は削除して返す
-    return pd.DataFrame(method_a_results).drop(columns='Changes'), pd.DataFrame(method_b_results).drop(columns='Changes')
+    return (pd.DataFrame(method_a_results).drop(columns='Changes'), 
+            pd.DataFrame(method_b_results).drop(columns='Changes'), 
+            pd.DataFrame(individual_bus_results))

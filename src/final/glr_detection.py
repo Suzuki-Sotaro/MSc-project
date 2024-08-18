@@ -187,25 +187,49 @@ def analyze_glr_with_methods(df, buses, statistics, threshold, p_values, aggrega
             'Recall': recall,
             'F1 Score': f1
         })
-    # method_a_resultsとmethod_b_resultsでDetectionsの列は削除して返す
-    return pd.DataFrame(method_a_results).drop(columns='Detections'), pd.DataFrame(method_b_results).drop(columns='Detections')
+    
+    # 各バスの個別性能を評価
+    individual_bus_results = []
+    for bus, detections in bus_detections.items():
+        accuracy = accuracy_score(labels, detections)
+        precision = precision_score(labels, detections)
+        recall = recall_score(labels, detections)
+        f1 = f1_score(labels, detections)
+        
+        individual_bus_results.append({
+            'Bus': bus,
+            'Method': 'Individual GLR',
+            'Threshold': threshold,
+            'Accuracy': accuracy,
+            'Precision': precision,
+            'Recall': recall,
+            'F1 Score': f1,
+            'Detection Time': np.argmax(detections) if np.any(detections) else -1
+        })
+    
+    return (pd.DataFrame(method_a_results).drop(columns='Detections'), 
+            pd.DataFrame(method_b_results).drop(columns='Detections'), 
+            pd.DataFrame(individual_bus_results))
+
 
 def analyze_glr(df, buses, statistics, threshold_values):
     results = []
+    individual_results = []
     
     p_values = [0.1, 0.2, 0.5, 0.7, 0.9]
     aggregation_methods = ['average', 'median', 'outlier_detection']
     sink_threshold_methods = ['average', 'minimum', 'maximum', 'median']
     
     for threshold in threshold_values:
-        method_a_results, method_b_results = analyze_glr_with_methods(
+        method_a_results, method_b_results, bus_results = analyze_glr_with_methods(
             df, buses, statistics, threshold, p_values, aggregation_methods, sink_threshold_methods
         )
         
         results.extend(method_a_results.to_dict('records'))
         results.extend(method_b_results.to_dict('records'))
+        individual_results.extend(bus_results.to_dict('records'))
     
-    return pd.DataFrame(results)
+    return pd.DataFrame(results), pd.DataFrame(individual_results)
 
 def find_optimal_threshold(df, buses, statistics, threshold_range):
     best_threshold = None

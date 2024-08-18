@@ -235,5 +235,25 @@ def analyze_gem_with_methods(df, buses, d, k_values, alpha_values, h_values, p_v
             'Recall': recall,
             'F1 Score': f1
         })
-    # method_a_resultsとmethod_b_resultsでAnomary以外の列のみを返す
-    return gem_results, pd.DataFrame(method_a_results).drop(columns=['Anomalies', 'One Bus Anomalies', 'All Buses Anomalies']), pd.DataFrame(method_b_results).drop(columns='Anomalies'), detection_times
+
+    # 各バスの個別結果を作成
+    individual_bus_results = []
+    for bus, anomalies in bus_anomalies.items():
+        cm, accuracy, precision, recall, f1 = evaluate_results(anomalies, labels[N1:])
+        individual_bus_results.append({
+            'Bus': bus,
+            'Method': 'Individual GEM',
+            'd': d,
+            'k': k_values[0],  # 簡略化のため最初のk値を使用
+            'Accuracy': accuracy,
+            'Precision': precision,
+            'Recall': recall,
+            'F1 Score': f1,
+            'Detection Time': detection_times[bus][0] if detection_times[bus] else -1
+        })
+
+    # method_a_resultsとmethod_b_resultsでAnomaly以外の列のみを返す
+    return (gem_results, 
+            pd.DataFrame(method_a_results).drop(columns=['Anomalies', 'One Bus Anomalies', 'All Buses Anomalies']), 
+            pd.DataFrame(method_b_results).drop(columns='Anomalies'), 
+            pd.DataFrame(individual_bus_results))

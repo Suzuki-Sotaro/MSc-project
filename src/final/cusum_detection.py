@@ -128,6 +128,7 @@ def method_b_cusum(bus_statistics, aggregation_methods, sink_threshold_methods):
 def analyze_cusum_with_methods(df, buses, statistics, threshold, p_values, aggregation_methods, sink_threshold_methods):
     bus_detections = {}
     bus_statistics = {}
+    individual_bus_results = []  # 各バスの個別結果を格納するリスト
     
     for bus in buses:
         data = df[bus].values
@@ -137,8 +138,27 @@ def analyze_cusum_with_methods(df, buses, statistics, threshold, p_values, aggre
         sigma_after = statistics[bus]['sigma_after']
         
         cusum_scores = cusum_for_each_bus(data, mean_before, sigma_before, mean_after, sigma_after, threshold)
-        bus_detections[bus] = (cusum_scores > threshold).astype(int)
+        detections = (cusum_scores > threshold).astype(int)
+        bus_detections[bus] = detections
         bus_statistics[bus] = cusum_scores
+        
+        # 各バスの個別性能を評価
+        labels = df['Label'].values
+        accuracy = accuracy_score(labels, detections)
+        precision = precision_score(labels, detections)
+        recall = recall_score(labels, detections)
+        f1 = f1_score(labels, detections)
+        
+        individual_bus_results.append({
+            'Bus': bus,
+            'Method': 'Individual CUSUM',
+            'Threshold': threshold,
+            'Accuracy': accuracy,
+            'Precision': precision,
+            'Recall': recall,
+            'F1 Score': f1,
+            'Detection Time': np.argmax(detections) if np.any(detections) else -1
+        })
     
     method_a_results = method_a_cusum(bus_detections, p_values)
     method_b_results = method_b_cusum(bus_statistics, aggregation_methods, sink_threshold_methods)
@@ -159,4 +179,4 @@ def analyze_cusum_with_methods(df, buses, statistics, threshold, p_values, aggre
             'F1 Score': f1
         })
     
-    return pd.DataFrame(method_a_results), pd.DataFrame(method_b_results)
+    return pd.DataFrame(method_a_results), pd.DataFrame(method_b_results), pd.DataFrame(individual_bus_results)
