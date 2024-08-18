@@ -187,8 +187,8 @@ def analyze_glr_with_methods(df, buses, statistics, threshold, p_values, aggrega
             'Recall': recall,
             'F1 Score': f1
         })
-    
-    return pd.DataFrame(method_a_results), pd.DataFrame(method_b_results)
+    # method_a_resultsとmethod_b_resultsでDetectionsの列は削除して返す
+    return pd.DataFrame(method_a_results).drop(columns='Detections'), pd.DataFrame(method_b_results).drop(columns='Detections')
 
 def analyze_glr(df, buses, statistics, threshold_values):
     results = []

@@ -167,4 +167,5 @@ def qq_detection(df, buses, window_size, p_values, aggregation_methods, sink_thr
             'F1 Score': f1
         })
     
-    return pd.DataFrame(method_a_results), pd.DataFrame(method_b_results)
+    # method_a_resultsとmethod_b_resultsでChangesの列は削除して返す
+    return pd.DataFrame(method_a_results).drop(columns='Changes'), pd.DataFrame(method_b_results).drop(columns='Changes')

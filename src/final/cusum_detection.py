@@ -160,20 +160,3 @@ def analyze_cusum_with_methods(df, buses, statistics, threshold, p_values, aggre
         })
     
     return pd.DataFrame(method_a_results), pd.DataFrame(method_b_results)
-
-def analyze_cusum(df, buses, statistics, threshold_values):
-    results = []
-    
-    p_values = [0.1, 0.2, 0.5, 0.7, 0.9]
-    aggregation_methods = ['average', 'median', 'outlier_detection']
-    sink_threshold_methods = ['average', 'minimum', 'maximum', 'median']
-    
-    for threshold in threshold_values:
-        method_a_results, method_b_results = analyze_cusum_with_methods(
-            df, buses, statistics, threshold, p_values, aggregation_methods, sink_threshold_methods
-        )
-        
-        results.extend(method_a_results.to_dict('records'))
-        results.extend(method_b_results.to_dict('records'))
-    
-    return pd.DataFrame(results)

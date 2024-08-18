@@ -235,5 +235,5 @@ def analyze_gem_with_methods(df, buses, d, k_values, alpha_values, h_values, p_v
             'Recall': recall,
             'F1 Score': f1
         })
-
-    return gem_results, pd.DataFrame(method_a_results),pd.DataFrame(method_b_results), detection_times
+    # method_a_resultsとmethod_b_resultsでAnomary以外の列のみを返す
+    return gem_results, pd.DataFrame(method_a_results).drop(columns=['Anomalies', 'One Bus Anomalies', 'All Buses Anomalies']), pd.DataFrame(method_b_results).drop(columns='Anomalies'), detection_times
