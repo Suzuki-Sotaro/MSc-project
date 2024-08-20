@@ -1,11 +1,11 @@
 # pca_detection.py
-
 import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
 import pandas as pd
-from method_a import apply_method_a, evaluate_method_a, calculate_far_ed
+from method_a import apply_method_a, evaluate_method_a
 from method_b import apply_method_b, evaluate_method_b
+from utils import calculate_far_ed
 
 def transform_time_series(data, d):
     return np.array([data[i:i+d] for i in range(len(data) - d + 1)])
@@ -48,37 +48,57 @@ def evaluate_results(pred_labels, true_labels):
     f1 = f1_score(true_labels, pred_labels, zero_division=0)
     return cm, accuracy, precision, recall, f1
 
-def learn_optimal_parameters(S1, S2, gamma_values, h_values, alpha):
-    best_f1 = 0
-    best_gamma = gamma_values[0]  # デフォルト値を最初のgamma値に設定
-    best_h = h_values[0]  # デフォルト値を最初のh値に設定
+def offline_phase(X, N1, N2, d, gamma):
+    # Step 1: Choose subsets S1 and S2
+    S1, S2 = X[:N1], X[N1:N1+N2]
     
-    N2 = len(S2)
+    # Step 2: Compute x̄ and Q over S1
+    x_bar = np.mean(S1, axis=0)
+    Q = np.cov(S1.T)
     
-    for gamma in gamma_values:
-        mean, V, residuals = compute_pca_statistics(S1, S2[:N2//2], gamma)
+    # Step 3: Compute eigenvalues and eigenvectors of Q
+    eigenvalues, eigenvectors = np.linalg.eig(Q)
+    
+    # Step 4: Determine r and form matrix V
+    cumulative_variance_ratio = np.cumsum(eigenvalues) / np.sum(eigenvalues)
+    r = np.argmax(cumulative_variance_ratio >= gamma) + 1
+    V = eigenvectors[:, :r]
+    
+    # Step 5-8: Compute residuals for S2
+    residuals = []
+    for x in S2:
+        r = x - x_bar - V @ V.T @ (x - x_bar)
+        residuals.append(np.linalg.norm(r))
+    
+    # Step 9: Sort residuals
+    sorted_residuals = np.sort(residuals)
+    
+    return x_bar, V, sorted_residuals
+
+def online_phase(x_bar, V, sorted_residuals, X_online, alpha, h):
+    N2 = len(sorted_residuals)
+    gt = 0
+    anomalies = []
+    
+    for xt in X_online:
+        # Step 5: Compute residual
+        rt = xt - x_bar - V @ V.T @ (xt - x_bar)
+        rt_norm = np.linalg.norm(rt)
         
-        for h in h_values:
-            anomalies = []
-            gt = 0
-            for t, xt in enumerate(S2[N2//2:]):
-                rt = compute_residual(xt, mean, V)
-                pt_hat = estimate_tail_probability(rt, residuals, len(residuals))
-                st = np.log(alpha / pt_hat)
-                gt = max(0, gt + st)
-                anomalies.append(gt >= h)
-            
-            true_labels = np.zeros(len(S2[N2//2:]), dtype=bool)
-            true_labels[len(S2[N2//2:])//2:] = True
-            
-            _, _, _, _, f1 = evaluate_results(anomalies, true_labels)
-            
-            if f1 > best_f1:
-                best_f1 = f1
-                best_gamma = gamma
-                best_h = h
+        # Step 6: Estimate tail probability
+        pt = np.sum(sorted_residuals > rt_norm) / N2
+        if pt == 0:
+            pt = 1 / (N2 * np.log(N2))  # Small non-zero value
+        
+        # Step 7: Compute statistical evidence
+        st = np.log(alpha / pt)
+        
+        # Step 8: Update decision statistic
+        gt = max(0, gt + st)
+        
+        anomalies.append(gt >= h)
     
-    return best_gamma, best_h
+    return np.array(anomalies)
 
 def analyze_pca(df, buses, d, gamma_values, h_values, alpha):
     results = []
@@ -95,45 +115,26 @@ def analyze_pca(df, buses, d, gamma_values, h_values, alpha):
         N = len(transformed_data)
         N1 = N // 2
         N2 = N - N1
-        S1, S2 = transformed_data[:N1], transformed_data[N1:]
         
-        # Learn optimal parameters
-        optimal_gamma, optimal_h = learn_optimal_parameters(S1, S2[:N2//2], gamma_values, h_values, alpha)
+        # Offline phase
+        x_bar, V, sorted_residuals = offline_phase(transformed_data, N1, N2, d, gamma_values[0])
         
-        # optimal_gammaがNoneの場合のデフォルト値を設定
-        if optimal_gamma is None:
-            optimal_gamma = gamma_values[0]
+        # Online phase
+        anomalies = online_phase(x_bar, V, sorted_residuals, transformed_data[N1:], alpha, h_values[0])
         
-        mean, V, residuals = compute_pca_statistics(S1, S2, optimal_gamma)
-        
-        anomalies = []
-        statistics = []
-        gt = 0
-        for t, xt in enumerate(transformed_data[N1:], start=N1):
-            rt = compute_residual(xt, mean, V)
-            pt_hat = estimate_tail_probability(rt, residuals, N2)
-            st = np.log(alpha / pt_hat)
-            gt = max(0, gt + st)
-            anomalies.append(gt >= optimal_h)
-            statistics.append(gt)
-        
-        bus_anomalies[bus] = np.array(anomalies)
-        bus_statistics[bus] = np.array(statistics)
-
+        bus_anomalies[bus] = anomalies
+        bus_statistics[bus] = sorted_residuals
         detection_times[bus] = next((t for t, anomaly in enumerate(anomalies) if anomaly), -1)
         
-        adjusted_labels = labels[d-1:]
-        pred_labels = np.zeros_like(adjusted_labels, dtype=bool)
-        pred_labels[N1:] = anomalies
-        
-        cm, accuracy, precision, recall, f1 = evaluate_results(pred_labels[N1:], adjusted_labels[N1:])
-        far, ed = calculate_far_ed(adjusted_labels[N1:], pred_labels[N1:], detection_times[bus])
+        adjusted_labels = labels[d-1+N1:]
+        cm, accuracy, precision, recall, f1 = evaluate_results(anomalies, adjusted_labels)
+        far, ed = calculate_far_ed(adjusted_labels, anomalies, detection_times[bus])
         
         results.append({
             'Bus': bus,
             'd': d,
-            'Optimal Gamma': optimal_gamma,
-            'Optimal h': optimal_h,
+            'Gamma': gamma_values[0],
+            'h': h_values[0],
             'Confusion Matrix': cm,
             'Accuracy': accuracy,
             'Precision': precision,
@@ -159,5 +160,4 @@ def analyze_pca_with_methods(df, buses, d, gamma_values, h_values, alpha, p_valu
 
     return (pca_results, 
             pd.DataFrame(method_a_results), 
-            pd.DataFrame(method_b_results), 
-            )
+            pd.DataFrame(method_b_results))

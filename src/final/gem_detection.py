@@ -3,8 +3,9 @@ import numpy as np
 from sklearn.neighbors import NearestNeighbors
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
 import pandas as pd
-from method_a import apply_method_a, evaluate_method_a, calculate_far_ed
+from method_a import apply_method_a, evaluate_method_a
 from method_b import apply_method_b, evaluate_method_b
+from utils import calculate_far_ed
 
 def transform_time_series(data, d):
     return np.array([data[i:i+d] for i in range(len(data) - d + 1)])

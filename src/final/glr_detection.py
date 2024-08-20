@@ -3,8 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import pandas as pd
-from method_a import apply_method_a, evaluate_method_a, calculate_far_ed
+from method_a import apply_method_a, evaluate_method_a
 from method_b import apply_method_b, evaluate_method_b
+from utils import calculate_far_ed
 
 def glr_detect(data, theta0, sigma, h, nu_min=0):
     n = len(data)

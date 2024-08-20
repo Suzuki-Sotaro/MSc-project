@@ -2,8 +2,9 @@
 import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from method_a import apply_method_a, evaluate_method_a, calculate_far_ed
+from method_a import apply_method_a, evaluate_method_a
 from method_b import apply_method_b, evaluate_method_b
+from utils import calculate_far_ed
 
 def calculate_statistics(df, buses):
     statistics = {}
@@ -41,8 +42,7 @@ def analyze_cusum_with_methods(df, buses, statistics, cusum_threshold_values, p_
     for threshold in cusum_threshold_values:
         bus_detections = {}
         bus_statistics = {}
-        individual_bus_results = []  # 各バスの個別結果を格納するリスト
-        
+        individual_bus_results = [] 
         for bus in buses:
             data = df[bus].values
             mean_before = statistics[bus]['mean_before']
