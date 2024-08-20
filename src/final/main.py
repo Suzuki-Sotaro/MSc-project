@@ -95,14 +95,14 @@ def main():
         'glr_analysis_results_method_a': glr_results_a,
         'glr_analysis_results_method_b': glr_results_b,
         'gem_analysis_results': gem_results,
-        'gem_analysis_results_method_a': gem_results_a,
-        'gem_analysis_results_method_b': gem_results_b,
+        'gem_analysis_results_method_a': gem_results_a.drop(columns='Detections'),
+        'gem_analysis_results_method_b': gem_results_b.drop(columns='Detections'),
         'qq_analysis_results': qq_results,
-        'qq_analysis_results_method_a': qq_results_a,
-        'qq_analysis_results_method_b': qq_results_b,
+        'qq_analysis_results_method_a': qq_results_a.drop(columns='Detections'),
+        'qq_analysis_results_method_b': qq_results_b.drop(columns='Detections'),
         'pca_analysis_results': pca_results,  
-        'pca_analysis_results_method_a': pca_results_a,  
-        'pca_analysis_results_method_b': pca_results_b  
+        'pca_analysis_results_method_a': pca_results_a.drop(columns='Detections'),  
+        'pca_analysis_results_method_b': pca_results_b.drop(columns='Detections')  
     }
     save_multiple_results(results_dict, output_dir)
 

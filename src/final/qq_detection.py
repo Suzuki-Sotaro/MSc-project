@@ -4,7 +4,7 @@ import pandas as pd
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from method_a import apply_method_a, evaluate_method_a
 from method_b import apply_method_b, evaluate_method_b
-from utils import calculate_far_ed
+from utils import calculate_far_ed, evaluate_results
 
 def calculate_qq_distance(window1, window2):
     if len(window1) == 0 or len(window2) == 0:
@@ -81,12 +81,8 @@ def qq_detection(df, buses, window_sizes, p_values, aggregation_methods, sink_th
             min_length = min(len(labels[window_size * 2 - 1:]), len(changes))
             labels_truncated = labels[window_size * 2 - 1:][:min_length]
             changes_truncated = changes[:min_length]
-            
-            accuracy = accuracy_score(labels_truncated, changes_truncated)
-            precision = precision_score(labels_truncated, changes_truncated, zero_division=0)
-            recall = recall_score(labels_truncated, changes_truncated)
-            f1 = f1_score(labels_truncated, changes_truncated)
             detection_time = np.argmax(changes) if np.any(changes) else -1
+            cm, accuracy, precision, recall, f1 = evaluate_results(changes_truncated, labels_truncated)
             far, ed = calculate_far_ed(labels_truncated, changes_truncated, detection_time)
             
             individual_bus_results.append({

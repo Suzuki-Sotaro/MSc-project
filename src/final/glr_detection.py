@@ -5,7 +5,7 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 import pandas as pd
 from method_a import apply_method_a, evaluate_method_a
 from method_b import apply_method_b, evaluate_method_b
-from utils import calculate_far_ed
+from utils import calculate_far_ed, evaluate_results
 
 def glr_detect(data, theta0, sigma, h, nu_min=0):
     n = len(data)
@@ -90,10 +90,7 @@ def analyze_glr_with_methods(df, buses, statistics, glr_threshold_values, p_valu
     # 各バスの個別性能を評価
     individual_bus_results = []
     for bus, detections in bus_detections.items():
-        accuracy = accuracy_score(labels, detections)
-        precision = precision_score(labels, detections, zero_division=0)
-        recall = recall_score(labels, detections)
-        f1 = f1_score(labels, detections)
+        cm, accuracy, precision, recall, f1 = evaluate_results(detections, labels)
         detection_time = np.argmax(detections) if np.any(detections) else -1
         far, ed = calculate_far_ed(labels, detections, detection_time)
         
@@ -129,8 +126,15 @@ def analyze_glr(df, buses, statistics, threshold_values):
             df, buses, statistics, threshold, p_values, aggregation_methods, sink_threshold_methods
         )
         
-        results_a.extend(method_a_results.to_dict('records'))
-        results_b.extend(method_b_results.to_dict('records'))
+        # Add the threshold value to each record in method_a_results and method_b_results
+        for record in method_a_results.to_dict('records'):
+            record['Threshold'] = threshold
+            results_a.append(record)
+        
+        for record in method_b_results.to_dict('records'):
+            record['Threshold'] = threshold
+            results_b.append(record)
+        
         individual_results.extend(bus_results.to_dict('records'))
     
     return pd.DataFrame(results_a), pd.DataFrame(results_b), pd.DataFrame(individual_results)

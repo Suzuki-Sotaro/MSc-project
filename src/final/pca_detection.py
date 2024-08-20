@@ -1,11 +1,10 @@
 # pca_detection.py
 import numpy as np
 from sklearn.decomposition import PCA
-from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
 import pandas as pd
 from method_a import apply_method_a, evaluate_method_a
 from method_b import apply_method_b, evaluate_method_b
-from utils import calculate_far_ed
+from utils import calculate_far_ed, evaluate_results
 
 def transform_time_series(data, d):
     return np.array([data[i:i+d] for i in range(len(data) - d + 1)])
@@ -39,14 +38,6 @@ def estimate_tail_probability(rt, residuals, N2):
     if pt_hat == 0:
         pt_hat = 1 / (N2 * np.log(N2))  # Small non-zero value
     return pt_hat
-
-def evaluate_results(pred_labels, true_labels):
-    cm = confusion_matrix(true_labels, pred_labels)
-    accuracy = accuracy_score(true_labels, pred_labels)
-    precision = precision_score(true_labels, pred_labels, zero_division=0)
-    recall = recall_score(true_labels, pred_labels, zero_division=0)
-    f1 = f1_score(true_labels, pred_labels, zero_division=0)
-    return cm, accuracy, precision, recall, f1
 
 def offline_phase(X, N1, N2, d, gamma):
     # Step 1: Choose subsets S1 and S2
