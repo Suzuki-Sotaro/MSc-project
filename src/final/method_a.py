@@ -3,66 +3,78 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
-def learn_local_threshold(data, labels, window_size):
-    best_threshold = 0
-    best_f1 = 0
-    for threshold in np.arange(0.1, 5.0, 0.1):
-        changes = detect_local_change(data, window_size, threshold)
-        f1 = f1_score(labels[window_size:], changes)
-        if f1 > best_f1:
-            best_f1 = f1
-            best_threshold = threshold
-    return best_threshold
-
-def detect_local_change(data, window_size, threshold):
-    changes = np.zeros(len(data) - window_size)
-    for i in range(window_size, len(data)):
-        if abs(np.mean(data[i-window_size:i]) - np.mean(data[i-window_size*2:i-window_size])) > threshold:
-            changes[i-window_size] = 1
-    return changes
-
-def analyze_method_a(df, buses, window_size, p_values):
+def apply_method_a(bus_detections, p_values):
     results = []
-    labels = df['Label'].values[window_size:]
-    bus_data = {bus: df[bus].values for bus in buses}
-
-    # Learn local thresholds using initial data
-    local_thresholds = {bus: learn_local_threshold(bus_data[bus][:len(bus_data[bus])//2], 
-                                                   df['Label'].values[:len(bus_data[bus])//2], 
-                                                   window_size) for bus in buses}
-
-    voting_schemes = ['at_least_one', 'all_buses'] + [f'p_{p}' for p in p_values]
+    n_buses = len(bus_detections)
     
-    for scheme in voting_schemes:
-        votes = np.zeros(len(labels))
-        for bus in buses:
-            changes = detect_local_change(bus_data[bus], window_size, local_thresholds[bus])
-            votes += changes
-
-        if scheme == 'at_least_one':
-            detection_time = np.argmax(votes > 0) if np.any(votes > 0) else -1
-        elif scheme == 'all_buses':
-            detection_time = np.argmax(votes == len(buses)) if np.any(votes == len(buses)) else -1
-        else:
-            p = float(scheme.split('_')[1])
-            detection_time = np.argmax(votes >= p * len(buses)) if np.any(votes >= p * len(buses)) else -1
-
-        pred_labels = np.zeros(len(labels))
-        if detection_time != -1:
-            pred_labels[detection_time:] = 1
-
-        accuracy = accuracy_score(labels, pred_labels)
-        recall = recall_score(labels, pred_labels)
-        precision = precision_score(labels, pred_labels)
-        f1 = f1_score(labels, pred_labels)
-
+    # Scheme 1: At least one bus
+    combined_detections_one = np.any(list(bus_detections.values()), axis=0)
+    detection_time_one = np.argmax(combined_detections_one) if np.any(combined_detections_one) else -1
+    
+    results.append({
+        'Method': 'Method A (At least one bus)',
+        'Detections': combined_detections_one,
+        'Detection Time': detection_time_one
+    })
+    
+    # Scheme 2: All buses
+    combined_detections_all = np.all(list(bus_detections.values()), axis=0)
+    detection_time_all = np.argmax(combined_detections_all) if np.any(combined_detections_all) else -1
+    
+    results.append({
+        'Method': 'Method A (All buses)',
+        'Detections': combined_detections_all,
+        'Detection Time': detection_time_all
+    })
+    
+    # Scheme 3: p% of buses
+    for p in p_values:
+        threshold = int(p * n_buses)
+        combined_detections = np.zeros_like(list(bus_detections.values())[0])
+        detection_time = -1
+        
+        for t in range(len(combined_detections)):
+            votes = sum(detections[t] for detections in bus_detections.values())
+            if votes >= threshold:
+                combined_detections[t] = 1
+                if detection_time == -1:
+                    detection_time = t
+        
         results.append({
-            'Voting Scheme': scheme,
-            'Detection Time': detection_time,
+            'Method': f'Method A (p={p})',
+            'Detections': combined_detections,
+            'Detection Time': detection_time
+        })
+    
+    return results
+
+def evaluate_method_a(results, labels):
+    for result in results:
+        detections = result['Detections']
+        accuracy = accuracy_score(labels, detections)
+        precision = precision_score(labels, detections, zero_division=0)
+        recall = recall_score(labels, detections)
+        f1 = f1_score(labels, detections)
+        far, ed = calculate_far_ed(labels, detections, result['Detection Time'])
+        
+        result.update({
             'Accuracy': accuracy,
             'Precision': precision,
             'Recall': recall,
-            'F1 Score': f1
+            'F1 Score': f1,
+            'False Alarm Rate': far,
+            'Expected Delay': ed
         })
+    
+    return results
 
-    return pd.DataFrame(results)
+def calculate_far_ed(true_labels, predicted_labels, detection_time):
+    far = np.sum((predicted_labels == 1) & (true_labels == 0)) / np.sum(true_labels == 0)
+    
+    if detection_time != -1 and np.any(true_labels == 1):
+        true_change_point = np.argmax(true_labels)
+        ed = max(0, detection_time - true_change_point)
+    else:
+        ed = np.inf
+    
+    return far, ed

@@ -73,7 +73,7 @@ def analyze_qq(data_ghadeer, window_size, buses):
 
 def evaluate_performance(predictions, labels):
     accuracy = accuracy_score(labels, predictions)
-    precision = precision_score(labels, predictions)
+    precision = precision_score(labels, predictions, zero_division=0)
     recall = recall_score(labels, predictions)
     f1 = f1_score(labels, predictions)
     return {

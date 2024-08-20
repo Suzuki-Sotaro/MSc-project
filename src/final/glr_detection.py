@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import pandas as pd
+from method_a import apply_method_a, evaluate_method_a, calculate_far_ed
+from method_b import apply_method_b, evaluate_method_b
 
 def glr_detect(data, theta0, sigma, h, nu_min=0):
     n = len(data)
@@ -73,147 +75,48 @@ def calculate_glr_scores(df, buses, statistics, threshold):
     
     return bus_detections, bus_scores
 
-def method_a_glr(bus_detections, p_values):
-    results = []
-    n_buses = len(bus_detections)
+def analyze_glr_with_methods(df, buses, statistics, glr_threshold_values, p_values, aggregation_methods, sink_threshold_methods):
+    bus_detections, bus_scores = calculate_glr_scores(df, buses, statistics, glr_threshold_values)
     
-    # Scheme 1: At least one bus
-    combined_detections_one = np.any(list(bus_detections.values()), axis=0)
-    detection_time_one = np.argmax(combined_detections_one) if np.any(combined_detections_one) else -1
-    
-    results.append({
-        'Method': 'Method A (At least one bus)',
-        'Detections': combined_detections_one,
-        'Detection Time': detection_time_one
-    })
-    
-    # Scheme 2: All buses
-    combined_detections_all = np.all(list(bus_detections.values()), axis=0)
-    detection_time_all = np.argmax(combined_detections_all) if np.any(combined_detections_all) else -1
-    
-    results.append({
-        'Method': 'Method A (All buses)',
-        'Detections': combined_detections_all,
-        'Detection Time': detection_time_all
-    })
-    
-    # Scheme 3: p% of buses
-    for p in p_values:
-        threshold = int(p * n_buses)
-        combined_detections = np.zeros_like(list(bus_detections.values())[0])
-        detection_time = -1
-        
-        for t in range(len(combined_detections)):
-            votes = sum(detections[t] for detections in bus_detections.values())
-            if votes >= threshold:
-                combined_detections[t] = 1
-                if detection_time == -1:
-                    detection_time = t
-        
-        results.append({
-            'Method': f'Method A (p={p})',
-            'Detections': combined_detections,
-            'Detection Time': detection_time
-        })
-    
-    return results
-
-def method_b_glr(bus_scores, aggregation_methods, sink_threshold_methods):
-    results = []
-    local_thresholds = [scores.max() for scores in bus_scores.values()]
-    
-    for agg_method in aggregation_methods:
-        for sink_method in sink_threshold_methods:
-            combined_detections = np.zeros_like(list(bus_scores.values())[0])
-            detection_time = -1
-            
-            if sink_method == 'average':
-                H = np.mean(local_thresholds)
-            elif sink_method == 'minimum':
-                H = np.min(local_thresholds)
-            elif sink_method == 'maximum':
-                H = np.max(local_thresholds)
-            elif sink_method == 'median':
-                H = np.median(local_thresholds)
-            
-            for t in range(len(combined_detections)):
-                statistics = [scores[t] for scores in bus_scores.values()]
-                
-                if agg_method == 'average':
-                    agg_stat = np.mean(statistics)
-                elif agg_method == 'median':
-                    agg_stat = np.median(statistics)
-                elif agg_method == 'outlier_detection':
-                    median = np.median(statistics)
-                    mad = np.median(np.abs(statistics - median))
-                    if mad == 0:
-                        agg_stat = np.mean(statistics)
-                    else:
-                        z_scores = 0.6745 * (statistics - median) / mad
-                        non_outliers = [s for s, z in zip(statistics, z_scores) if abs(z) <= 3.5]
-                        agg_stat = np.mean(non_outliers) if non_outliers else np.mean(statistics)
-                
-                if agg_stat > H:
-                    combined_detections[t] = 1
-                    if detection_time == -1:
-                        detection_time = t
-            
-            results.append({
-                'Method': f'Method B ({agg_method}, {sink_method})',
-                'Detections': combined_detections,
-                'Detection Time': detection_time
-            })
-    
-    return results
-
-def analyze_glr_with_methods(df, buses, statistics, threshold, p_values, aggregation_methods, sink_threshold_methods):
-    bus_detections, bus_scores = calculate_glr_scores(df, buses, statistics, threshold)
-    
-    method_a_results = method_a_glr(bus_detections, p_values)
-    method_b_results = method_b_glr(bus_scores, aggregation_methods, sink_threshold_methods)
+    method_a_results = apply_method_a(bus_detections, p_values)
+    method_b_results = apply_method_b(bus_scores, aggregation_methods, sink_threshold_methods)
     
     labels = df['Label'].values
     
-    for result in method_a_results + method_b_results:
-        detections = result['Detections']
-        accuracy = accuracy_score(labels, detections)
-        precision = precision_score(labels, detections)
-        recall = recall_score(labels, detections)
-        f1 = f1_score(labels, detections)
-        
-        result.update({
-            'Accuracy': accuracy,
-            'Precision': precision,
-            'Recall': recall,
-            'F1 Score': f1
-        })
+    method_a_results = evaluate_method_a(method_a_results, labels)
+    method_b_results = evaluate_method_b(method_b_results, labels)
     
     # 各バスの個別性能を評価
     individual_bus_results = []
     for bus, detections in bus_detections.items():
         accuracy = accuracy_score(labels, detections)
-        precision = precision_score(labels, detections)
+        precision = precision_score(labels, detections, zero_division=0)
         recall = recall_score(labels, detections)
         f1 = f1_score(labels, detections)
+        detection_time = np.argmax(detections) if np.any(detections) else -1
+        far, ed = calculate_far_ed(labels, detections, detection_time)
         
         individual_bus_results.append({
             'Bus': bus,
             'Method': 'Individual GLR',
-            'Threshold': threshold,
+            'GLR Threshold Values': glr_threshold_values,
             'Accuracy': accuracy,
             'Precision': precision,
             'Recall': recall,
             'F1 Score': f1,
-            'Detection Time': np.argmax(detections) if np.any(detections) else -1
+            'False Alarm Rate': far,
+            'Expected Delay': ed,
+            'Detection Time': detection_time
         })
     
-    return (pd.DataFrame(method_a_results).drop(columns='Detections'), 
+    return (pd.DataFrame(individual_bus_results),
+            pd.DataFrame(method_a_results).drop(columns='Detections'), 
             pd.DataFrame(method_b_results).drop(columns='Detections'), 
-            pd.DataFrame(individual_bus_results))
-
+            )
 
 def analyze_glr(df, buses, statistics, threshold_values):
-    results = []
+    results_a = []
+    results_b = []
     individual_results = []
     
     p_values = [0.1, 0.2, 0.5, 0.7, 0.9]
@@ -221,15 +124,15 @@ def analyze_glr(df, buses, statistics, threshold_values):
     sink_threshold_methods = ['average', 'minimum', 'maximum', 'median']
     
     for threshold in threshold_values:
-        method_a_results, method_b_results, bus_results = analyze_glr_with_methods(
+        bus_results, method_a_results, method_b_results = analyze_glr_with_methods(
             df, buses, statistics, threshold, p_values, aggregation_methods, sink_threshold_methods
         )
         
-        results.extend(method_a_results.to_dict('records'))
-        results.extend(method_b_results.to_dict('records'))
+        results_a.extend(method_a_results.to_dict('records'))
+        results_b.extend(method_b_results.to_dict('records'))
         individual_results.extend(bus_results.to_dict('records'))
     
-    return pd.DataFrame(results), pd.DataFrame(individual_results)
+    return pd.DataFrame(results_a), pd.DataFrame(results_b), pd.DataFrame(individual_results)
 
 def find_optimal_threshold(df, buses, statistics, threshold_range):
     best_threshold = None

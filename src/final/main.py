@@ -5,88 +5,106 @@ import pandas as pd
 from cusum_detection import analyze_cusum_with_methods, calculate_statistics
 from glr_detection import analyze_glr
 from qq_detection import qq_detection
-from method_a import analyze_method_a
-from method_b import analyze_method_b
 from gem_detection import analyze_gem_with_methods
+from pca_detection import analyze_pca_with_methods  
 
-# Load and preprocess the data
 def load_and_preprocess_data(file_path, buses, n_samples):
     df = pd.read_csv(file_path)
     selected_buses = ['Week', 'Label'] + buses
-    df = df[selected_buses].tail(n_samples)
-    return df
+    return df[selected_buses].tail(n_samples)
 
 def save_results(results, output_dir, filename):
     os.makedirs(output_dir, exist_ok=True)
     output_path = os.path.join(output_dir, filename)
     results.to_csv(output_path, index=False)
 
+def run_cusum_analysis(df, buses, statistics, params):
+    cusum_results_a, cusum_results_b, individual_bus_results = analyze_cusum_with_methods(
+        df, buses, statistics, params['cusum_threshold_values'], 
+        params['p_values'], params['aggregation_methods'], 
+        params['sink_threshold_methods']
+    )
+    return pd.DataFrame(individual_bus_results), pd.DataFrame(cusum_results_a), pd.DataFrame(cusum_results_b)
+
+
+def run_glr_analysis(df, buses, statistics, params):
+    return analyze_glr(df, buses, statistics, params['glr_threshold_values'])
+
+def run_gem_analysis(df, buses, params):
+    return analyze_gem_with_methods(
+        df, buses, params['d'], params['k_values'], params['alpha_values'], 
+        params['h_values'], params['p_values'], params['aggregation_methods'], 
+        params['sink_threshold_methods']
+    )
+
+def run_qq_analysis(df, buses, params):
+    return qq_detection(df, buses, params['window_sizes'], params['p_values'], 
+                        params['aggregation_methods'], params['sink_threshold_methods'])
+    
+def run_pca_analysis(df, buses, params):  
+    return analyze_pca_with_methods(
+        df, buses, params['d'], params['gamma_values'], params['h_values'],
+        params['alpha'], params['p_values'], params['aggregation_methods'],
+        params['sink_threshold_methods']
+    )
+
+def save_multiple_results(results_dict, output_dir):
+    for name, results in results_dict.items():
+        save_results(results, output_dir, f'{name}.csv')
+
 def main():
+    # Configuration
     file_path = './data/LMP.csv'
     buses = ['Bus115', 'Bus116', 'Bus117', 'Bus118', 'Bus119', 'Bus121', 'Bus135', 'Bus139']
     n_samples = 855
-    window_size = 24
+    output_dir = './results/table/'
+
+    # Common parameters
+    params = {
+        'window_sizes': [12, 24, 48],  # QQ検出用の複数のウィンドウサイズ
+        'cusum_threshold_values': [0.1, 1, 10],
+        'p_values': [0.1, 0.2, 0.5, 0.7, 0.9],
+        'aggregation_methods': ['average', 'median', 'outlier_detection'],
+        'sink_threshold_methods': ['average', 'minimum', 'maximum', 'median'],
+        'glr_threshold_values': [0.01, 0.1, 1],
+        'd': 3,
+        'k_values': [10],
+        'alpha_values': [0.1, 0.3, 0.5, 0.7], 
+        'h_values': [3, 5, 7, 10],
+        'gamma_values': [0.9, 0.95, 0.99], 
+        'alpha': 0.05  # PCA
+    }
 
     # Load and preprocess the data
     df = load_and_preprocess_data(file_path, buses, n_samples)
-
-    # Calculate the statistical properties of the data
     statistics = calculate_statistics(df, buses)
 
-    # Parameters
-    cusum_threshold_values = [5, 10, 15]
-    p_values = [0.1, 0.2, 0.5, 0.7, 0.9]
-    aggregation_methods = ['average', 'median', 'outlier_detection']
-    sink_threshold_methods = ['average', 'minimum', 'maximum', 'median']
-    glr_threshold_values = [0.1, 1, 10]
-    d = 3
-    k_values = [10, 20]
-    alpha_values = [0.01, 0.1, 1, 10]
-    h_values = [1, 10]
+    # Run analyses
+    cusum_results, cusum_results_a, cusum_results_b = run_cusum_analysis(df, buses, statistics, params)
+    glr_results, glr_results_a, glr_results_b = run_glr_analysis(df, buses, statistics, params)
+    gem_results, gem_results_a, gem_results_b = run_gem_analysis(df, buses, params)
+    qq_results, qq_results_a, qq_results_b = run_qq_analysis(df, buses, params)
+    pca_results, pca_results_a, pca_results_b = run_pca_analysis(df, buses, params)  
 
-    # CUSUM analysis with Method A and B
-    cusum_results = []
-    individual_bus_results = []
-    for threshold in cusum_threshold_values:
-        method_a_results, method_b_results, bus_results = analyze_cusum_with_methods(
-            df, buses, statistics, threshold, p_values, aggregation_methods, sink_threshold_methods
-        )
-        for results in [method_a_results, method_b_results]:
-            results['Threshold'] = threshold
-            cusum_results.extend(results.to_dict('records'))
-        individual_bus_results.extend(bus_results.to_dict('records'))
-    
-    cusum_results_df = pd.DataFrame(cusum_results).drop(columns='Detections')
-    save_results(cusum_results_df, './results/table/', 'cusum_analysis_results_with_methods_ab.csv')
-    
-    individual_bus_results_df = pd.DataFrame(individual_bus_results)
-    save_results(individual_bus_results_df, './results/table/', 'cusum_analysis_results_individual_buses.csv')
-
-
-    # GLR analysis using Method A and B
-    glr_results, glr_individual_results = analyze_glr(df, buses, statistics, glr_threshold_values)
-    save_results(glr_results, './results/table/', 'glr_analysis_results.csv')
-    save_results(glr_individual_results, './results/table/', 'glr_analysis_results_individual_buses.csv')
-    
-    # GEM analysis using Method A and B
-    p_values = [0.1, 0.2, 0.5, 0.7, 0.9]
-    aggregation_methods = ['average', 'median', 'outlier_detection']
-    sink_threshold_methods = ['average', 'minimum', 'maximum', 'median']
-    gem_results, gem_results_a, gem_results_b, gem_individual_results = analyze_gem_with_methods(
-        df, buses, d, k_values, alpha_values, h_values, p_values, aggregation_methods, sink_threshold_methods
-    )
-    save_results(gem_results, './results/table/', 'gem_analysis_results.csv')
-    save_results(gem_results_a, './results/table/', 'gem_analysis_results_a.csv')
-    save_results(gem_results_b, './results/table/', 'gem_analysis_results_b.csv')
-    save_results(gem_individual_results, './results/table/', 'gem_analysis_results_individual_buses.csv')
-
-
-    # Q-Q detection analysis using Method A and B
-    method_a_results, method_b_results, qq_individual_results = qq_detection(df, buses, window_size, p_values, aggregation_methods, sink_threshold_methods)
-    save_results(method_a_results, './results/table/', 'qq_method_a_results.csv')
-    save_results(method_b_results, './results/table/', 'qq_method_b_results.csv')
-    save_results(qq_individual_results, './results/table/', 'qq_analysis_results_individual_buses.csv')
-
+    # Save results
+    results_dict = {
+        'cusum_analysis_results': cusum_results,
+        'cusum_analysis_results_method_a': cusum_results_a,
+        'cusum_analysis_results_method_b': cusum_results_b,
+        'glr_analysis_results': glr_results,
+        'glr_analysis_results_method_a': glr_results_a,
+        'glr_analysis_results_method_b': glr_results_b,
+        'gem_analysis_results': gem_results,
+        'gem_analysis_results_method_a': gem_results_a,
+        'gem_analysis_results_method_b': gem_results_b,
+        'qq_analysis_results': qq_results,
+        'qq_analysis_results_method_a': qq_results_a,
+        'qq_analysis_results_method_b': qq_results_b,
+        'pca_analysis_results': pca_results,  
+        'pca_analysis_results_method_a': pca_results_a,  
+        'pca_analysis_results_method_b': pca_results_b  
+    }
+    save_multiple_results(results_dict, output_dir)
 
 if __name__ == '__main__':
     main()

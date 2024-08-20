@@ -2,6 +2,8 @@
 import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from method_a import apply_method_a, evaluate_method_a, calculate_far_ed
+from method_b import apply_method_b, evaluate_method_b
 
 def calculate_statistics(df, buses):
     statistics = {}
@@ -23,7 +25,6 @@ def calculate_statistics(df, buses):
 def cusum_for_each_bus(data, mean_before, sigma_before, mean_after, sigma_after, threshold):
     n = len(data)
     cusum_scores = np.zeros(n)
-    detection_point = -1
     
     for i in range(1, n):
         likelihood_ratio = np.log((1 / (np.sqrt(2 * np.pi) * sigma_after)) * np.exp(-0.5 * ((data[i] - mean_after) / sigma_after) ** 2)) - \
@@ -32,151 +33,58 @@ def cusum_for_each_bus(data, mean_before, sigma_before, mean_after, sigma_after,
         
     return cusum_scores
 
-def method_a_cusum(bus_detections, p_values):
-    results = []
-    n_buses = len(bus_detections)
+def analyze_cusum_with_methods(df, buses, statistics, cusum_threshold_values, p_values, aggregation_methods, sink_threshold_methods):
+    all_method_a_results = []
+    all_method_b_results = []
+    all_individual_bus_results = []
     
-    # Scheme 1: At least one bus
-    combined_detections_one = np.any(list(bus_detections.values()), axis=0)
-    detection_time_one = np.argmax(combined_detections_one) if np.any(combined_detections_one) else -1
-    
-    results.append({
-        'Method': 'Method A (At least one bus)',
-        'Detections': combined_detections_one,
-        'Detection Time': detection_time_one
-    })
-    
-    # Scheme 2: All buses
-    combined_detections_all = np.all(list(bus_detections.values()), axis=0)
-    detection_time_all = np.argmax(combined_detections_all) if np.any(combined_detections_all) else -1
-    
-    results.append({
-        'Method': 'Method A (All buses)',
-        'Detections': combined_detections_all,
-        'Detection Time': detection_time_all
-    })
-    
-    # Scheme 3: p% of buses
-    for p in p_values:
-        threshold = int(p * n_buses)
-        combined_detections = np.zeros_like(list(bus_detections.values())[0])
-        detection_time = -1
+    for threshold in cusum_threshold_values:
+        bus_detections = {}
+        bus_statistics = {}
+        individual_bus_results = []  # 各バスの個別結果を格納するリスト
         
-        for t in range(len(combined_detections)):
-            votes = sum(detections[t] for detections in bus_detections.values())
-            if votes >= threshold:
-                combined_detections[t] = 1
-                if detection_time == -1:
-                    detection_time = t
-        
-        results.append({
-            'Method': f'Method A (p={p})',
-            'Detections': combined_detections,
-            'Detection Time': detection_time
-        })
-    
-    return results
-
-def method_b_cusum(bus_statistics, aggregation_methods, sink_threshold_methods):
-    results = []
-    local_thresholds = [stats.max() for stats in bus_statistics.values()]
-    
-    for agg_method in aggregation_methods:
-        for sink_method in sink_threshold_methods:
-            combined_detections = np.zeros_like(list(bus_statistics.values())[0])
-            detection_time = -1
+        for bus in buses:
+            data = df[bus].values
+            mean_before = statistics[bus]['mean_before']
+            sigma_before = statistics[bus]['sigma_before']
+            mean_after = statistics[bus]['mean_after']
+            sigma_after = statistics[bus]['sigma_after']
             
-            if sink_method == 'average':
-                H = np.mean(local_thresholds)
-            elif sink_method == 'minimum':
-                H = np.min(local_thresholds)
-            elif sink_method == 'maximum':
-                H = np.max(local_thresholds)
-            elif sink_method == 'median':
-                H = np.median(local_thresholds)
+            cusum_scores = cusum_for_each_bus(data, mean_before, sigma_before, mean_after, sigma_after, threshold)
+            detections = (cusum_scores > threshold).astype(int)
+            bus_detections[bus] = detections
+            bus_statistics[bus] = cusum_scores
             
-            for t in range(len(combined_detections)):
-                statistics = [stats[t] for stats in bus_statistics.values()]
-                
-                if agg_method == 'average':
-                    agg_stat = np.mean(statistics)
-                elif agg_method == 'median':
-                    agg_stat = np.median(statistics)
-                elif agg_method == 'outlier_detection':
-                    median = np.median(statistics)
-                    mad = np.median(np.abs(statistics - median))
-                    if mad == 0:
-                        agg_stat = np.mean(statistics)
-                    else:
-                        z_scores = 0.6745 * (statistics - median) / mad
-                        non_outliers = [s for s, z in zip(statistics, z_scores) if abs(z) <= 3.5]
-                        agg_stat = np.mean(non_outliers) if non_outliers else np.mean(statistics)
-                
-                if agg_stat > H:
-                    combined_detections[t] = 1
-                    if detection_time == -1:
-                        detection_time = t
+            # 各バスの個別性能を評価
+            labels = df['Label'].values
+            accuracy = accuracy_score(labels, detections)
+            precision = precision_score(labels, detections, zero_division=0)
+            recall = recall_score(labels, detections)
+            f1 = f1_score(labels, detections)
+            far, ed = calculate_far_ed(labels, detections, np.argmax(detections) if np.any(detections) else -1)
             
-            results.append({
-                'Method': f'Method B ({agg_method}, {sink_method})',
-                'Detections': combined_detections,
-                'Detection Time': detection_time
+            individual_bus_results.append({
+                'Bus': bus,
+                'Method': 'Individual CUSUM',
+                'Cusum Threshold': threshold,
+                'Accuracy': accuracy,
+                'Precision': precision,
+                'Recall': recall,
+                'F1 Score': f1,
+                'False Alarm Rate': far,
+                'Expected Delay': ed,
+                'Detection Time': np.argmax(detections) if np.any(detections) else -1
             })
-    
-    return results
-
-def analyze_cusum_with_methods(df, buses, statistics, threshold, p_values, aggregation_methods, sink_threshold_methods):
-    bus_detections = {}
-    bus_statistics = {}
-    individual_bus_results = []  # 各バスの個別結果を格納するリスト
-    
-    for bus in buses:
-        data = df[bus].values
-        mean_before = statistics[bus]['mean_before']
-        sigma_before = statistics[bus]['sigma_before']
-        mean_after = statistics[bus]['mean_after']
-        sigma_after = statistics[bus]['sigma_after']
         
-        cusum_scores = cusum_for_each_bus(data, mean_before, sigma_before, mean_after, sigma_after, threshold)
-        detections = (cusum_scores > threshold).astype(int)
-        bus_detections[bus] = detections
-        bus_statistics[bus] = cusum_scores
+        method_a_results = apply_method_a(bus_detections, p_values)
+        method_b_results =  apply_method_b(bus_statistics, aggregation_methods, sink_threshold_methods)
         
-        # 各バスの個別性能を評価
         labels = df['Label'].values
-        accuracy = accuracy_score(labels, detections)
-        precision = precision_score(labels, detections)
-        recall = recall_score(labels, detections)
-        f1 = f1_score(labels, detections)
+        method_a_results = evaluate_method_a(method_a_results, labels)
+        method_b_results = evaluate_method_b(method_b_results, labels)
         
-        individual_bus_results.append({
-            'Bus': bus,
-            'Method': 'Individual CUSUM',
-            'Threshold': threshold,
-            'Accuracy': accuracy,
-            'Precision': precision,
-            'Recall': recall,
-            'F1 Score': f1,
-            'Detection Time': np.argmax(detections) if np.any(detections) else -1
-        })
+        all_method_a_results.extend(method_a_results)
+        all_method_b_results.extend(method_b_results)
+        all_individual_bus_results.extend(individual_bus_results)
     
-    method_a_results = method_a_cusum(bus_detections, p_values)
-    method_b_results = method_b_cusum(bus_statistics, aggregation_methods, sink_threshold_methods)
-    
-    labels = df['Label'].values
-    
-    for result in method_a_results + method_b_results:
-        detections = result['Detections']
-        accuracy = accuracy_score(labels, detections)
-        precision = precision_score(labels, detections)
-        recall = recall_score(labels, detections)
-        f1 = f1_score(labels, detections)
-        
-        result.update({
-            'Accuracy': accuracy,
-            'Precision': precision,
-            'Recall': recall,
-            'F1 Score': f1
-        })
-    
-    return pd.DataFrame(method_a_results), pd.DataFrame(method_b_results), pd.DataFrame(individual_bus_results)
+    return pd.DataFrame(all_method_a_results), pd.DataFrame(all_method_b_results), pd.DataFrame(all_individual_bus_results)
