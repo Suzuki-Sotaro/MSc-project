@@ -87,7 +87,6 @@ def qq_detection(df, buses, window_sizes, p_values, aggregation_methods, sink_th
             
             individual_bus_results.append({
                 'Bus': bus,
-                'Method': 'Individual Q-Q',
                 'Window Size': window_size,
                 'Threshold': local_threshold,
                 'Accuracy': accuracy,
@@ -117,6 +116,7 @@ def qq_detection(df, buses, window_sizes, p_values, aggregation_methods, sink_th
         method_a_results.extend(method_a_results_window)
         method_b_results.extend(method_b_results_window)
     
+    print("Q-Q detection analysis completed.")
     return (pd.DataFrame(individual_bus_results),
             pd.DataFrame(method_a_results),
             pd.DataFrame(method_b_results))

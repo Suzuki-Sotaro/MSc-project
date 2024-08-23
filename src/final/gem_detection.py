@@ -126,13 +126,13 @@ def analyze_gem(df, buses, d, k_values, alpha_values, h_values):
             'k': optimal_k,
             'alpha': optimal_alpha,
             'Optimal Threshold': optimal_threshold,
-            'Confusion Matrix': cm,
             'Accuracy': accuracy,
             'Precision': precision,
             'Recall': recall,
             'F1 Score': f1,
             'False Alarm Rate': far,
-            'Expected Delay': ed
+            'Expected Delay': ed,
+            'Detecion Time': detection_times[bus]
         })
     
     return pd.DataFrame(results), bus_anomalies, bus_statistics, detection_times, binary_detections
@@ -149,6 +149,8 @@ def analyze_gem_with_methods(df, buses, d, k_values, alpha_values, h_values, p_v
     method_a_results = evaluate_method_a(method_a_results, labels[N1:])
     method_b_results = evaluate_method_b(method_b_results, labels[N1:])
 
+    print("GEM analysis completed.")
+    
     return (gem_results, 
             pd.DataFrame(method_a_results), 
             pd.DataFrame(method_b_results), 

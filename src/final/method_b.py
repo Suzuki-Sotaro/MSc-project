@@ -2,6 +2,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from utils import calculate_far_ed
 
 def apply_method_b(bus_statistics, aggregation_methods, sink_threshold_methods):
     results = []
@@ -71,13 +72,3 @@ def evaluate_method_b(results, labels):
     
     return results
 
-def calculate_far_ed(true_labels, predicted_labels, detection_time):
-    far = np.sum((predicted_labels == 1) & (true_labels == 0)) / np.sum(true_labels == 0)
-    
-    if detection_time != -1 and np.any(true_labels == 1):
-        true_change_point = np.argmax(true_labels)
-        ed = max(0, detection_time - true_change_point)
-    else:
-        ed = np.inf
-    
-    return far, ed

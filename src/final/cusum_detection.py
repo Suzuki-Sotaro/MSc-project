@@ -10,27 +10,17 @@ def calculate_statistics(df, buses):
     statistics = {}
     for bus in buses:
         bus_data = df[bus].values
-        label = df['Label'].values
-        
-        data_before = bus_data[label == 0]
-        data_after = bus_data[label == 1]
-        
         statistics[bus] = {
-            'mean_before': np.mean(data_before),
-            'sigma_before': np.std(data_before),
-            'mean_after': np.mean(data_after),
-            'sigma_after': np.std(data_after)
+            'mean': np.mean(bus_data)
         }
     return statistics
 
-def cusum_for_each_bus(data, mean_before, sigma_before, mean_after, sigma_after, threshold):
+def nonparametric_cusum_for_each_bus(data, mean, threshold):
     n = len(data)
     cusum_scores = np.zeros(n)
     
     for i in range(1, n):
-        likelihood_ratio = np.log((1 / (np.sqrt(2 * np.pi) * sigma_after)) * np.exp(-0.5 * ((data[i] - mean_after) / sigma_after) ** 2)) - \
-                           np.log((1 / (np.sqrt(2 * np.pi) * sigma_before)) * np.exp(-0.5 * ((data[i] - mean_before) / sigma_before) ** 2))
-        cusum_scores[i] = max(0, cusum_scores[i-1] + likelihood_ratio)
+        cusum_scores[i] = max(0, cusum_scores[i-1] + data[i] - mean)
         
     return cusum_scores
 
@@ -45,12 +35,9 @@ def analyze_cusum_with_methods(df, buses, statistics, cusum_threshold_values, p_
         individual_bus_results = [] 
         for bus in buses:
             data = df[bus].values
-            mean_before = statistics[bus]['mean_before']
-            sigma_before = statistics[bus]['sigma_before']
-            mean_after = statistics[bus]['mean_after']
-            sigma_after = statistics[bus]['sigma_after']
+            mean = statistics[bus]['mean']
             
-            cusum_scores = cusum_for_each_bus(data, mean_before, sigma_before, mean_after, sigma_after, threshold)
+            cusum_scores = nonparametric_cusum_for_each_bus(data, mean, threshold)
             detections = (cusum_scores > threshold).astype(int)
             bus_detections[bus] = detections
             bus_statistics[bus] = cusum_scores
@@ -62,7 +49,6 @@ def analyze_cusum_with_methods(df, buses, statistics, cusum_threshold_values, p_
             
             individual_bus_results.append({
                 'Bus': bus,
-                'Method': 'Individual CUSUM',
                 'Cusum Threshold': threshold,
                 'Accuracy': accuracy,
                 'Precision': precision,
@@ -74,14 +60,22 @@ def analyze_cusum_with_methods(df, buses, statistics, cusum_threshold_values, p_
             })
         
         method_a_results = apply_method_a(bus_detections, p_values)
-        method_b_results =  apply_method_b(bus_statistics, aggregation_methods, sink_threshold_methods)
+        method_b_results = apply_method_b(bus_statistics, aggregation_methods, sink_threshold_methods)
         
         labels = df['Label'].values
         method_a_results = evaluate_method_a(method_a_results, labels)
         method_b_results = evaluate_method_b(method_b_results, labels)
         
+        # Add the threshold to each record in method_a_results and method_b_results
+        for record in method_a_results:
+            record['Cusum Threshold'] = threshold
+        for record in method_b_results:
+            record['Cusum Threshold'] = threshold
+        
         all_method_a_results.extend(method_a_results)
         all_method_b_results.extend(method_b_results)
         all_individual_bus_results.extend(individual_bus_results)
+        
+    print("Nonparametric CUSUM analysis completed.")
     
     return pd.DataFrame(all_method_a_results), pd.DataFrame(all_method_b_results), pd.DataFrame(all_individual_bus_results)

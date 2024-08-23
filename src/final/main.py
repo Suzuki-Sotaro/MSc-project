@@ -2,16 +2,18 @@
 import os
 import numpy as np
 import pandas as pd
+from multiprocessing import Pool, cpu_count
 from cusum_detection import analyze_cusum_with_methods, calculate_statistics
 from glr_detection import analyze_glr
 from qq_detection import qq_detection
 from gem_detection import analyze_gem_with_methods
 from pca_detection import analyze_pca_with_methods  
 
-def load_and_preprocess_data(file_path, buses, n_samples):
+def load_and_preprocess_data(file_path, n_samples):
     df = pd.read_csv(file_path)
-    selected_buses = ['Week', 'Label'] + buses
-    return df[selected_buses].tail(n_samples)
+    bus_columns = ['Bus115', 'Bus116', 'Bus117', 'Bus118', 'Bus119', 'Bus121', 'Bus135', 'Bus139']
+    selected_buses = ['Week', 'Label'] + bus_columns
+    return df[selected_buses].tail(n_samples), bus_columns
 
 def save_results(results, output_dir, filename):
     os.makedirs(output_dir, exist_ok=True)
@@ -24,87 +26,99 @@ def run_cusum_analysis(df, buses, statistics, params):
         params['p_values'], params['aggregation_methods'], 
         params['sink_threshold_methods']
     )
-    return pd.DataFrame(individual_bus_results), pd.DataFrame(cusum_results_a), pd.DataFrame(cusum_results_b)
+    combined_results_ab = pd.concat([pd.DataFrame(cusum_results_a), pd.DataFrame(cusum_results_b)], ignore_index=True)
+    return pd.DataFrame(individual_bus_results), combined_results_ab
 
-
-def run_glr_analysis(df, buses, statistics, params):
-    return analyze_glr(df, buses, statistics, params['glr_threshold_values'])
+def run_glr_analysis(df, buses, params):
+    window_size = params['window_size_glr'] 
+    glr_results = analyze_glr(df, buses, window_size, params['glr_threshold_values'])
+    combined_results_ab = pd.concat([glr_results[1], glr_results[2]], ignore_index=True)
+    return glr_results[0], combined_results_ab
 
 def run_gem_analysis(df, buses, params):
-    return analyze_gem_with_methods(
+    gem_results = analyze_gem_with_methods(
         df, buses, params['d'], params['k_values'], params['alpha_values'], 
         params['h_values'], params['p_values'], params['aggregation_methods'], 
         params['sink_threshold_methods']
     )
+    combined_results_ab = pd.concat([gem_results[1], gem_results[2]], ignore_index=True)
+    return gem_results[0], combined_results_ab
 
 def run_qq_analysis(df, buses, params):
-    return qq_detection(df, buses, params['window_sizes'], params['p_values'], 
+    qq_results = qq_detection(df, buses, params['window_sizes'], params['p_values'], 
                         params['aggregation_methods'], params['sink_threshold_methods'])
+    combined_results_ab = pd.concat([qq_results[1], qq_results[2]], ignore_index=True)
+    return qq_results[0], combined_results_ab
     
 def run_pca_analysis(df, buses, params):  
-    return analyze_pca_with_methods(
+    pca_results = analyze_pca_with_methods(
         df, buses, params['d'], params['gamma_values'], params['h_values'],
         params['alpha'], params['p_values'], params['aggregation_methods'],
         params['sink_threshold_methods']
     )
+    combined_results_ab = pd.concat([pca_results[1], pca_results[2]], ignore_index=True)
+    return pca_results[0], combined_results_ab
 
-def save_multiple_results(results_dict, output_dir):
-    for name, results in results_dict.items():
-        save_results(results, output_dir, f'{name}.csv')
+def run_analysis(analysis_func, df, buses, *args):
+    return analysis_func(df, buses, *args)
+
+def parallel_analysis(df, buses, statistics, params):
+    with Pool(processes=cpu_count()) as pool:
+        cusum_results = pool.apply_async(run_analysis, (run_cusum_analysis, df, buses, statistics, params))
+        glr_results = pool.apply_async(run_analysis, (run_glr_analysis, df, buses, params))
+        gem_results = pool.apply_async(run_analysis, (run_gem_analysis, df, buses, params))
+        qq_results = pool.apply_async(run_analysis, (run_qq_analysis, df, buses, params))
+        pca_results = pool.apply_async(run_analysis, (run_pca_analysis, df, buses, params))
+
+        cusum_results = cusum_results.get()
+        glr_results = glr_results.get()
+        gem_results = gem_results.get()
+        qq_results = qq_results.get()
+        pca_results = pca_results.get()
+
+    return cusum_results, glr_results, gem_results, qq_results, pca_results
 
 def main():
-    # Configuration
     file_path = './data/LMP.csv'
-    buses = ['Bus115', 'Bus116', 'Bus117', 'Bus118', 'Bus119', 'Bus121', 'Bus135', 'Bus139']
     n_samples = 855
     output_dir = './results/table/'
 
-    # Common parameters
     params = {
-        'window_sizes': [12, 24, 48],  # QQ検出用の複数のウィンドウサイズ
-        'cusum_threshold_values': [0.1, 1, 10],
+        'window_sizes': [24],
+        'window_size_glr': 24,
+        'cusum_threshold_values': [3],
         'p_values': [0.1, 0.2, 0.5, 0.7, 0.9],
         'aggregation_methods': ['average', 'median', 'outlier_detection'],
         'sink_threshold_methods': ['average', 'minimum', 'maximum', 'median'],
-        'glr_threshold_values': [0.01, 0.1, 1],
+        'glr_threshold_values': [3],
         'd': 3,
         'k_values': [10],
-        'alpha_values': [0.1, 0.3, 0.5, 0.7], 
-        'h_values': [3, 5, 7, 10],
-        'gamma_values': [0.9, 0.95, 0.99], 
-        'alpha': 0.05  # PCA
+        'alpha_values': [0.3],
+        'h_values': [3],
+        'gamma_values': [0.5],
+        'alpha': 0.05
     }
 
-    # Load and preprocess the data
-    df = load_and_preprocess_data(file_path, buses, n_samples)
+    df, buses = load_and_preprocess_data(file_path, n_samples)
     statistics = calculate_statistics(df, buses)
 
-    # Run analyses
-    cusum_results, cusum_results_a, cusum_results_b = run_cusum_analysis(df, buses, statistics, params)
-    glr_results, glr_results_a, glr_results_b = run_glr_analysis(df, buses, statistics, params)
-    gem_results, gem_results_a, gem_results_b = run_gem_analysis(df, buses, params)
-    qq_results, qq_results_a, qq_results_b = run_qq_analysis(df, buses, params)
-    pca_results, pca_results_a, pca_results_b = run_pca_analysis(df, buses, params)  
+    cusum_results, glr_results, gem_results, qq_results, pca_results = parallel_analysis(df, buses, statistics, params)
 
-    # Save results
     results_dict = {
-        'cusum_analysis_results': cusum_results,
-        'cusum_analysis_results_method_a': cusum_results_a,
-        'cusum_analysis_results_method_b': cusum_results_b,
-        'glr_analysis_results': glr_results,
-        'glr_analysis_results_method_a': glr_results_a,
-        'glr_analysis_results_method_b': glr_results_b,
-        'gem_analysis_results': gem_results,
-        'gem_analysis_results_method_a': gem_results_a.drop(columns='Detections'),
-        'gem_analysis_results_method_b': gem_results_b.drop(columns='Detections'),
-        'qq_analysis_results': qq_results,
-        'qq_analysis_results_method_a': qq_results_a.drop(columns='Detections'),
-        'qq_analysis_results_method_b': qq_results_b.drop(columns='Detections'),
-        'pca_analysis_results': pca_results,  
-        'pca_analysis_results_method_a': pca_results_a.drop(columns='Detections'),  
-        'pca_analysis_results_method_b': pca_results_b.drop(columns='Detections')  
+        'cusum_analysis_results': cusum_results[0],
+        'cusum_analysis_results_method_ab': cusum_results[1].drop(columns=['Detections']),
+        'glr_analysis_results': glr_results[0],
+        'glr_analysis_results_method_ab': glr_results[1].drop(columns=['Detections']),
+        'gem_analysis_results': gem_results[0],
+        'gem_analysis_results_method_ab': gem_results[1].drop(columns=['Detections']),
+        'qq_analysis_results': qq_results[0],
+        'qq_analysis_results_method_ab': qq_results[1].drop(columns=['Detections']),
+        'pca_analysis_results': pca_results[0],
+        'pca_analysis_results_method_ab': pca_results[1].drop(columns=['Detections'])
     }
-    save_multiple_results(results_dict, output_dir)
+
+    for name, results in results_dict.items():
+        save_results(results, output_dir, f'{name}.csv')
 
 if __name__ == '__main__':
     main()
