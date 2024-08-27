@@ -13,7 +13,7 @@ def load_and_preprocess_data(file_path, n_samples):
     df = pd.read_csv(file_path)
     bus_columns = ['Bus115', 'Bus116', 'Bus117', 'Bus118', 'Bus119', 'Bus121', 'Bus135', 'Bus139']
     selected_buses = ['Week', 'Label'] + bus_columns
-    return df[selected_buses].tail(n_samples), bus_columns
+    return df[selected_buses].tail(n_samples).reset_index(), bus_columns
 
 def save_results(results, output_dir, filename):
     os.makedirs(output_dir, exist_ok=True)
@@ -45,7 +45,7 @@ def run_gem_analysis(df, buses, params):
     return gem_results[0], combined_results_ab
 
 def run_qq_analysis(df, buses, params):
-    qq_results = qq_detection(df, buses, params['window_sizes'], params['p_values'], 
+    qq_results = qq_detection(df, buses, params['window_sizes'], params['qq_threshold_values'], params['p_values'], 
                         params['aggregation_methods'], params['sink_threshold_methods'])
     combined_results_ab = pd.concat([qq_results[1], qq_results[2]], ignore_index=True)
     return qq_results[0], combined_results_ab
@@ -82,21 +82,22 @@ def main():
     file_path = './data/LMP.csv'
     n_samples = 855
     output_dir = './results/table/'
-
+    output_dir_figures = './results/figure/'
     params = {
         'window_sizes': [24],
         'window_size_glr': 24,
-        'cusum_threshold_values': [3],
-        'p_values': [0.1, 0.2, 0.5, 0.7, 0.9],
-        'aggregation_methods': ['average', 'median', 'outlier_detection'],
-        'sink_threshold_methods': ['average', 'minimum', 'maximum', 'median'],
-        'glr_threshold_values': [3],
+        'cusum_threshold_values': [0.1, 0.5, 1.0, 2.0],
+        'glr_threshold_values': [1000, 1500, 2000, 2500],
+        'qq_threshold_values': [0.01, 0.05, 0.1, 0.2],
         'd': 3,
         'k_values': [10],
-        'alpha_values': [0.3],
-        'h_values': [3],
-        'gamma_values': [0.5],
-        'alpha': 0.05
+        'alpha_values': [0.1, 0.3, 0.5, 0.7, 0.9],
+        'h_values': [1, 3, 5, 7, 10],
+        'gamma_values': [0.3, 0.5, 0.7, 0.9],
+        'alpha': 0.05,
+        'p_values': [0.1, 0.2, 0.5, 0.7, 0.9],
+        'aggregation_methods': ['average', 'median', 'outlier_detection'],
+        'sink_threshold_methods': ['average', 'minimum', 'maximum', 'median']
     }
 
     df, buses = load_and_preprocess_data(file_path, n_samples)
@@ -105,20 +106,26 @@ def main():
     cusum_results, glr_results, gem_results, qq_results, pca_results = parallel_analysis(df, buses, statistics, params)
 
     results_dict = {
-        'cusum_analysis_results': cusum_results[0],
-        'cusum_analysis_results_method_ab': cusum_results[1].drop(columns=['Detections']),
-        'glr_analysis_results': glr_results[0],
-        'glr_analysis_results_method_ab': glr_results[1].drop(columns=['Detections']),
-        'gem_analysis_results': gem_results[0],
-        'gem_analysis_results_method_ab': gem_results[1].drop(columns=['Detections']),
-        'qq_analysis_results': qq_results[0],
-        'qq_analysis_results_method_ab': qq_results[1].drop(columns=['Detections']),
-        'pca_analysis_results': pca_results[0],
-        'pca_analysis_results_method_ab': pca_results[1].drop(columns=['Detections'])
+        'cusum_analysis_results': cusum_results[0].drop(columns=['Data', 'Label', 'Detection']),
+        'cusum_analysis_results_method_ab': cusum_results[1].drop(columns=['Data', 'Label', 'Detection']),
+        'glr_analysis_results': glr_results[0].drop(columns=['Data', 'Label', 'Detection']),
+        'glr_analysis_results_method_ab': glr_results[1].drop(columns=['Data', 'Label', 'Detection']),
+        'gem_analysis_results': gem_results[0].drop(columns=['Data', 'Label', 'Detection']),
+        'gem_analysis_results_method_ab': gem_results[1].drop(columns=['Data', 'Label', 'Detection']),
+        'qq_analysis_results': qq_results[0].drop(columns=['Data', 'Label', 'Detection']),
+        'qq_analysis_results_method_ab': qq_results[1].drop(columns=['Data', 'Label', 'Detection']),
+        'pca_analysis_results': pca_results[0].drop(columns=['Data', 'Label', 'Detection']),
+        'pca_analysis_results_method_ab': pca_results[1].drop(columns=['Data', 'Label', 'Detection'])
     }
 
     for name, results in results_dict.items():
         save_results(results, output_dir, f'{name}.csv')
 
 if __name__ == '__main__':
+    
+    # import visualizations
+    # visualizations.main()
     main()
+    
+    
+    

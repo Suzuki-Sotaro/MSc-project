@@ -3,14 +3,19 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from utils import calculate_far_ed
+# Set the threshold to a higher number or use `np.inf` to show all elements
+np.set_printoptions(threshold=np.inf)
 
-def apply_method_b(bus_statistics, aggregation_methods, sink_threshold_methods):
+
+def apply_method_b(bus_statistics, aggregation_methods, sink_threshold_methods, df, buses):
     results = []
     local_thresholds = [stats.max() for stats in bus_statistics.values()]
     
+    combined_data_length = len(list(bus_statistics.values())[0])
+    
     for agg_method in aggregation_methods:
         for sink_method in sink_threshold_methods:
-            combined_detections = np.zeros_like(list(bus_statistics.values())[0])
+            combined_detections = np.zeros_like(list(bus_statistics.values())[0]).astype(int).tolist()  # Initialize as list of integers
             detection_time = -1
             
             if sink_method == 'average':
@@ -46,15 +51,21 @@ def apply_method_b(bus_statistics, aggregation_methods, sink_threshold_methods):
             
             results.append({
                 'Method': f'Method B ({agg_method}, {sink_method})',
-                'Detections': combined_detections,
-                'Detection Time': detection_time
+                'Detection': combined_detections,
+                'Detection Time': detection_time,
+                'Data': df[buses].values.tolist()[-combined_data_length:],  # Convert to list if needed
+                'Label': df['Label'].values.astype(int).tolist()[-combined_data_length:]  # Convert to list of integers
             })
-    
+    # resultsのDataのshapeを表示する。
+    print(np.array(results[0]['Detection']).shape)
+    print(np.array(results[0]['Data']).shape)
+    print(np.array(results[0]['Label']).shape)
     return results
 
 def evaluate_method_b(results, labels):
+    labels = np.array(labels).astype(int).tolist()  # Convert to list of integers if needed
     for result in results:
-        detections = result['Detections']
+        detections = np.array(result['Detection']).astype(int).tolist()  # Convert to list of integers
         accuracy = accuracy_score(labels, detections)
         precision = precision_score(labels, detections, zero_division=0)
         recall = recall_score(labels, detections)
@@ -71,4 +82,3 @@ def evaluate_method_b(results, labels):
         })
     
     return results
-

@@ -81,19 +81,23 @@ def analyze_pca_with_methods(df, buses, d, gamma_values, h_values, alpha, p_valu
                 
                 # Online phase
                 anomalies = online_phase(x_bar, V, sorted_residuals, transformed_data[N1:], alpha, h)
+                anomalies = anomalies.astype(int).tolist()  # Convert to list of integers
                 
                 bus_anomalies[bus] = anomalies
                 bus_statistics[bus] = sorted_residuals
                 
-                labels = df['Label'].values[d-1+N1:]
+                labels = df['Label'].values[d-1+N1:].astype(int).tolist()  # Convert to list of integers
                 cm, accuracy, precision, recall, f1 = evaluate_results(anomalies, labels)
                 far, ed = calculate_far_ed(labels, anomalies, np.argmax(anomalies) if np.any(anomalies) else -1)
                 
                 all_individual_bus_results.append({
                     'Bus': bus,
+                    'Data': data.tolist()[d-1+N1:],  # Convert to list if needed
+                    'Label': labels,
+                    'Detection': anomalies,
                     'd': d,
                     'Gamma': gamma,
-                    'h': h,
+                    'Threshold': h,
                     'Accuracy': accuracy,
                     'Precision': precision,
                     'Recall': recall,
@@ -103,10 +107,10 @@ def analyze_pca_with_methods(df, buses, d, gamma_values, h_values, alpha, p_valu
                     'Detection Time': np.argmax(anomalies) if np.any(anomalies) else -1
                 })
             
-            method_a_results = apply_method_a(bus_anomalies, p_values)
-            method_b_results = apply_method_b(bus_statistics, aggregation_methods, sink_threshold_methods)
+            method_a_results = apply_method_a(bus_anomalies, p_values, df, buses)
+            method_b_results = apply_method_b(bus_statistics, aggregation_methods, sink_threshold_methods, df, buses)
             
-            labels = df['Label'].values[d-1+N1:]
+            labels = df['Label'].values[d-1+N1:].astype(int).tolist()  # Convert to list of integers
             method_a_results = evaluate_method_a(method_a_results, labels)
             method_b_results = evaluate_method_b(method_b_results, labels)
             
@@ -116,8 +120,12 @@ def analyze_pca_with_methods(df, buses, d, gamma_values, h_values, alpha, p_valu
             
             all_method_a_results.extend(method_a_results)
             all_method_b_results.extend(method_b_results)
-    
+            
+    all_individual_bus_results = pd.DataFrame(all_individual_bus_results)
+    all_individual_bus_results['Label'] = all_individual_bus_results['Label'].apply(lambda x: list(map(int, x)))
+    all_individual_bus_results['Detection'] = all_individual_bus_results['Detection'].apply(lambda x: list(map(int, x)))
+
     print("PCA analysis completed.")
-    return (pd.DataFrame(all_individual_bus_results), 
+    return (all_individual_bus_results, 
             pd.DataFrame(all_method_a_results), 
             pd.DataFrame(all_method_b_results))

@@ -38,17 +38,22 @@ def analyze_cusum_with_methods(df, buses, statistics, cusum_threshold_values, p_
             mean = statistics[bus]['mean']
             
             cusum_scores = nonparametric_cusum_for_each_bus(data, mean, threshold)
-            detections = (cusum_scores > threshold).astype(int)
+            detections = (cusum_scores > threshold).astype(int).tolist()  # Convert to list of integers
             bus_detections[bus] = detections
             bus_statistics[bus] = cusum_scores
             
-            # 各バスの個別性能を評価
-            labels = df['Label'].values
+            # Prepare labels
+            labels = df['Label'].values.astype(int).tolist()  # Convert to list of integers
+            
+            # Evaluate results
             cm, accuracy, precision, recall, f1 = evaluate_results(detections, labels)
             far, ed = calculate_far_ed(labels, detections, np.argmax(detections) if np.any(detections) else -1)
             
             individual_bus_results.append({
                 'Bus': bus,
+                'Data': data.tolist(),  # Convert to list if needed
+                'Label': labels,
+                'Detection': detections,
                 'Cusum Threshold': threshold,
                 'Accuracy': accuracy,
                 'Precision': precision,
@@ -58,9 +63,8 @@ def analyze_cusum_with_methods(df, buses, statistics, cusum_threshold_values, p_
                 'Expected Delay': ed,
                 'Detection Time': np.argmax(detections) if np.any(detections) else -1
             })
-        
-        method_a_results = apply_method_a(bus_detections, p_values)
-        method_b_results = apply_method_b(bus_statistics, aggregation_methods, sink_threshold_methods)
+        method_a_results = apply_method_a(bus_detections, p_values, df, buses)
+        method_b_results = apply_method_b(bus_statistics, aggregation_methods, sink_threshold_methods, df, buses)
         
         labels = df['Label'].values
         method_a_results = evaluate_method_a(method_a_results, labels)
