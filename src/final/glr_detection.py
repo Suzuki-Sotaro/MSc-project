@@ -1,4 +1,5 @@
 # below is the content of glr_detection.py
+# below is the content of glr_detection.py
 import numpy as np
 import pandas as pd
 from scipy import stats
@@ -69,51 +70,52 @@ def estimate_change_magnitude(data, change_point, window_size):
     change_magnitude = np.median(after_change) - np.median(before_change)
     return change_magnitude
 
-def analyze_glr_with_methods(df, buses, window_size, glr_threshold_values, p_values, aggregation_methods, sink_threshold_methods):
+def analyze_glr_with_methods(df, buses, window_sizes, glr_threshold_values, p_values, aggregation_methods, sink_threshold_methods):
     all_method_a_results = []
     all_method_b_results = []
     all_individual_bus_results = []
 
-    for threshold in glr_threshold_values:
-        bus_detections, bus_scores, bus_change_magnitudes = calculate_glr_scores(df, buses, window_size, threshold)
+    for window_size in window_sizes:
+        for threshold in glr_threshold_values:
+            bus_detections, bus_scores, bus_change_magnitudes = calculate_glr_scores(df, buses, window_size, threshold)
 
-        method_a_results = apply_method_a(bus_detections, p_values, df, buses)
-        method_b_results = apply_method_b(bus_scores, aggregation_methods, sink_threshold_methods, df, buses)
+            method_a_results = apply_method_a(bus_detections, p_values, df, buses)
+            method_b_results = apply_method_b(bus_scores, aggregation_methods, sink_threshold_methods, df, buses)
 
-        labels = df['Label'].values.astype(int).tolist()  # Convert to list of integers
+            labels = df['Label'].values.astype(int).tolist()  # Convert to list of integers
 
-        method_a_results = evaluate_method_a(method_a_results, labels)
-        method_b_results = evaluate_method_b(method_b_results, labels)
-        
-        for bus, detections in bus_detections.items():
-            detections = detections.astype(int).tolist()  # Convert to list of integers
-            cm, accuracy, precision, recall, f1 = evaluate_results(detections, labels)
-            detection_time = np.argmax(detections) if np.any(detections) else -1
-            far, ed = calculate_far_ed(labels, detections, detection_time)
+            method_a_results = evaluate_method_a(method_a_results, labels)
+            method_b_results = evaluate_method_b(method_b_results, labels)
+            
+            for bus, detections in bus_detections.items():
+                detections = detections.astype(int).tolist()  # Convert to list of integers
+                cm, accuracy, precision, recall, f1 = evaluate_results(detections, labels)
+                detection_time = np.argmax(detections) if np.any(detections) else -1
+                far, ed = calculate_far_ed(labels, detections, detection_time)
 
-            all_individual_bus_results.append({
-                'Bus': bus,
-                'Data': df[bus].values.tolist(),  # Convert to list if needed
-                'Label' : labels,
-                'Detection': detections,
-                'GLR Threshold': threshold,
-                'Window Size': window_size,
-                'Accuracy': accuracy,
-                'Precision': precision,
-                'Recall': recall,
-                'F1 Score': f1,
-                'False Alarm Rate': far,
-                'Expected Delay': ed,
-                'Detection Time': detection_time,
-                'Change Magnitude': bus_change_magnitudes[bus]
-            })
+                all_individual_bus_results.append({
+                    'Bus': bus,
+                    'Data': df[bus].values.tolist(),  # Convert to list if needed
+                    'Label': labels,
+                    'Detection': detections,
+                    'Window Size': window_size,
+                    'GLR Threshold': threshold,
+                    'Accuracy': accuracy,
+                    'Precision': precision,
+                    'Recall': recall,
+                    'F1 Score': f1,
+                    'False Alarm Rate': far,
+                    'Expected Delay': ed,
+                    'Detection Time': detection_time,
+                    'Change Magnitude': bus_change_magnitudes[bus]
+                })
 
-        for result in method_a_results + method_b_results:
-            result['GLR Threshold'] = threshold
-            result['Window Size'] = window_size
+            for result in method_a_results + method_b_results:
+                result['Window Size'] = window_size
+                result['GLR Threshold'] = threshold
 
-        all_method_a_results.extend(method_a_results)
-        all_method_b_results.extend(method_b_results)
+            all_method_a_results.extend(method_a_results)
+            all_method_b_results.extend(method_b_results)
 
     print("Nonparametric GLR analysis completed.")
     all_individual_bus_results = pd.DataFrame(all_individual_bus_results)
@@ -122,9 +124,9 @@ def analyze_glr_with_methods(df, buses, window_size, glr_threshold_values, p_val
 
     return all_individual_bus_results, pd.DataFrame(all_method_a_results), pd.DataFrame(all_method_b_results)
 
-def analyze_glr(df, buses, window_size, threshold_values):
+def analyze_glr(df, buses, window_sizes, threshold_values):
     p_values = [0.1, 0.2, 0.5, 0.7, 0.9]
     aggregation_methods = ['average', 'median', 'outlier_detection']
     sink_threshold_methods = ['average', 'minimum', 'maximum', 'median']
 
-    return analyze_glr_with_methods(df, buses, window_size, threshold_values, p_values, aggregation_methods, sink_threshold_methods)
+    return analyze_glr_with_methods(df, buses, window_sizes, threshold_values, p_values, aggregation_methods, sink_threshold_methods)

@@ -27,13 +27,15 @@ process_and_save(cusum_file, "cusum_bus_116_varying_threshold.csv", [("Bus", "Bu
 
 # GLR analysis
 glr_file = "glr_analysis_results.csv"
-process_and_save(glr_file, "glr_all_buses_fixed_threshold.csv", [("GLR Threshold", 2000)])
-process_and_save(glr_file, "glr_bus_135_varying_threshold.csv", [("Bus", "Bus135")])
+process_and_save(glr_file, "glr_all_buses_fixed_threshold_window_size.csv", [("GLR Threshold", 2000), ("Window Size", 24)])
+process_and_save(glr_file, "glr_bus_135_varying_threshold.csv", [("Bus", "Bus135"), ("Window Size", 24)])
+process_and_save(glr_file, "glr_bus_135_varying_window_size.csv", [("Bus", "Bus135"), ("GLR Threshold", 2000)])
 
 # QQ analysis
 qq_file = "qq_analysis_results.csv"
-process_and_save(qq_file, "qq_all_buses_fixed_threshold.csv", [("QQ Threshold", 0.1)])
-process_and_save(qq_file, "qq_bus_119_varying_threshold.csv", [("Bus", "Bus119")])
+process_and_save(qq_file, "qq_all_buses_fixed_threshold_window_size.csv", [("QQ Threshold", 0.1), ("Window Size", 24)])
+process_and_save(qq_file, "qq_bus_119_varying_threshold.csv", [("Bus", "Bus119"), ("Window Size", 24)])
+process_and_save(qq_file, "qq_bus_119_varying_window_size.csv", [("Bus", "Bus119"), ("QQ Threshold", 0.1)])
 
 # GEM analysis
 gem_file = "gem_analysis_results.csv"

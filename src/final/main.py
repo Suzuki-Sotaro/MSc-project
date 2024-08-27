@@ -30,8 +30,7 @@ def run_cusum_analysis(df, buses, statistics, params):
     return pd.DataFrame(individual_bus_results), combined_results_ab
 
 def run_glr_analysis(df, buses, params):
-    window_size = params['window_size_glr'] 
-    glr_results = analyze_glr(df, buses, window_size, params['glr_threshold_values'])
+    glr_results = analyze_glr(df, buses, params['window_sizes_glr'], params['glr_threshold_values'])
     combined_results_ab = pd.concat([glr_results[1], glr_results[2]], ignore_index=True)
     return glr_results[0], combined_results_ab
 
@@ -45,7 +44,7 @@ def run_gem_analysis(df, buses, params):
     return gem_results[0], combined_results_ab
 
 def run_qq_analysis(df, buses, params):
-    qq_results = qq_detection(df, buses, params['window_sizes'], params['qq_threshold_values'], params['p_values'], 
+    qq_results = qq_detection(df, buses, params['window_sizes_qq'], params['qq_threshold_values'], params['p_values'], 
                         params['aggregation_methods'], params['sink_threshold_methods'])
     combined_results_ab = pd.concat([qq_results[1], qq_results[2]], ignore_index=True)
     return qq_results[0], combined_results_ab
@@ -84,16 +83,16 @@ def main():
     output_dir = './results/table/'
     output_dir_figures = './results/figure/'
     params = {
-        'window_sizes': [24],
-        'window_size_glr': 24,
-        'cusum_threshold_values': [0.1, 0.5, 1.0, 2.0],
-        'glr_threshold_values': [1000, 1500, 2000, 2500],
-        'qq_threshold_values': [0.01, 0.05, 0.1, 0.2],
+        'window_sizes_qq': [6, 12, 24, 48, 96],
+        'window_sizes_glr': [6, 12, 24, 48, 96],
+        'cusum_threshold_values': [0.1, 0.2, 0.5, 1.0, 2.0],
+        'glr_threshold_values': [1000, 1500, 2000, 2500, 3000],
+        'qq_threshold_values': [0.01, 0.05, 0.1, 0.2, 0.4],
         'd': 3,
         'k_values': [10],
         'alpha_values': [0.1, 0.3, 0.5, 0.7, 0.9],
         'h_values': [1, 3, 5, 7, 10],
-        'gamma_values': [0.3, 0.5, 0.7, 0.9],
+        'gamma_values': [0.1, 0.3, 0.5, 0.7, 0.9],
         'alpha': 0.05,
         'p_values': [0.1, 0.2, 0.5, 0.7, 0.9],
         'aggregation_methods': ['average', 'median', 'outlier_detection'],
