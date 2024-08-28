@@ -48,6 +48,7 @@ def analyze_cusum_with_methods(df, buses, statistics, cusum_threshold_values, p_
             # Evaluate results
             cm, accuracy, precision, recall, f1 = evaluate_results(detections, labels)
             far, ed = calculate_far_ed(labels, detections, np.argmax(detections) if np.any(detections) else -1)
+            print("expected delay", ed)
             
             individual_bus_results.append({
                 'Bus': bus,
@@ -79,6 +80,8 @@ def analyze_cusum_with_methods(df, buses, statistics, cusum_threshold_values, p_
         all_method_a_results.extend(method_a_results)
         all_method_b_results.extend(method_b_results)
         all_individual_bus_results.extend(individual_bus_results)
+        
+        
         
     print("Nonparametric CUSUM analysis completed.")
     

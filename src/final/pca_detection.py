@@ -57,69 +57,72 @@ def online_phase(x_bar, V, sorted_residuals, X_online, alpha, h):
     
     return np.array(anomalies)
 
-def analyze_pca_with_methods(df, buses, d, gamma_values, h_values, alpha, p_values, aggregation_methods, sink_threshold_methods):
+def analyze_pca_with_methods(df, buses, d, gamma_values, h_values, alpha_values, p_values, aggregation_methods, sink_threshold_methods):
     all_individual_bus_results = []
     all_method_a_results = []
     all_method_b_results = []
     
     for gamma in gamma_values:
         for h in h_values:
-            bus_anomalies = {}
-            bus_statistics = {}
-            
-            for bus in buses:
-                data = df[bus].values
-                transformed_data = transform_time_series(data, d)
+            for alpha in alpha_values:
+                bus_anomalies = {}
+                bus_statistics = {}
                 
-                N = len(transformed_data)
-                N1 = N // 2
-                N2 = N - N1
+                for bus in buses:
+                    data = df[bus].values
+                    transformed_data = transform_time_series(data, d)
+                    
+                    N = len(transformed_data)
+                    N1 = N // 2
+                    N2 = N - N1
+                    
+                    # Offline phase
+                    S1, S2 = transformed_data[:N1], transformed_data[N1:]
+                    x_bar, V, sorted_residuals = offline_phase(S1, S2, gamma)
+                    
+                    # Online phase
+                    anomalies = online_phase(x_bar, V, sorted_residuals, transformed_data[N1:], alpha, h)
+                    anomalies = anomalies.astype(int).tolist()  # Convert to list of integers
+                    
+                    bus_anomalies[bus] = anomalies
+                    bus_statistics[bus] = sorted_residuals
+                    
+                    labels = df['Label'].values[d-1+N1:].astype(int).tolist()  # Convert to list of integers
+                    cm, accuracy, precision, recall, f1 = evaluate_results(anomalies, labels)
+                    far, ed = calculate_far_ed(labels, anomalies, np.argmax(anomalies) if np.any(anomalies) else -1)
+                    
+                    all_individual_bus_results.append({
+                        'Bus': bus,
+                        'Data': data.tolist()[d-1+N1:],  # Convert to list if needed
+                        'Label': labels,
+                        'Detection': anomalies,
+                        'd': d,
+                        'Gamma': gamma,
+                        'Threshold': h,
+                        'Alpha': alpha,
+                        'Accuracy': accuracy,
+                        'Precision': precision,
+                        'Recall': recall,
+                        'F1 Score': f1,
+                        'False Alarm Rate': far,
+                        'Expected Delay': ed,
+                        'Detection Time': np.argmax(anomalies) if np.any(anomalies) else -1
+                    })
                 
-                # Offline phase
-                S1, S2 = transformed_data[:N1], transformed_data[N1:]
-                x_bar, V, sorted_residuals = offline_phase(S1, S2, gamma)
-                
-                # Online phase
-                anomalies = online_phase(x_bar, V, sorted_residuals, transformed_data[N1:], alpha, h)
-                anomalies = anomalies.astype(int).tolist()  # Convert to list of integers
-                
-                bus_anomalies[bus] = anomalies
-                bus_statistics[bus] = sorted_residuals
+                method_a_results = apply_method_a(bus_anomalies, p_values, df, buses)
+                method_b_results = apply_method_b(bus_statistics, aggregation_methods, sink_threshold_methods, df, buses)
                 
                 labels = df['Label'].values[d-1+N1:].astype(int).tolist()  # Convert to list of integers
-                cm, accuracy, precision, recall, f1 = evaluate_results(anomalies, labels)
-                far, ed = calculate_far_ed(labels, anomalies, np.argmax(anomalies) if np.any(anomalies) else -1)
+                method_a_results = evaluate_method_a(method_a_results, labels)
+                method_b_results = evaluate_method_b(method_b_results, labels)
                 
-                all_individual_bus_results.append({
-                    'Bus': bus,
-                    'Data': data.tolist()[d-1+N1:],  # Convert to list if needed
-                    'Label': labels,
-                    'Detection': anomalies,
-                    'd': d,
-                    'Gamma': gamma,
-                    'Threshold': h,
-                    'Accuracy': accuracy,
-                    'Precision': precision,
-                    'Recall': recall,
-                    'F1 Score': f1,
-                    'False Alarm Rate': far,
-                    'Expected Delay': ed,
-                    'Detection Time': np.argmax(anomalies) if np.any(anomalies) else -1
-                })
-            
-            method_a_results = apply_method_a(bus_anomalies, p_values, df, buses)
-            method_b_results = apply_method_b(bus_statistics, aggregation_methods, sink_threshold_methods, df, buses)
-            
-            labels = df['Label'].values[d-1+N1:].astype(int).tolist()  # Convert to list of integers
-            method_a_results = evaluate_method_a(method_a_results, labels)
-            method_b_results = evaluate_method_b(method_b_results, labels)
-            
-            for result in method_a_results + method_b_results:
-                result['Gamma'] = gamma
-                result['h'] = h
-            
-            all_method_a_results.extend(method_a_results)
-            all_method_b_results.extend(method_b_results)
+                for result in method_a_results + method_b_results:
+                    result['Gamma'] = gamma
+                    result['h'] = h
+                    result['Alpha'] = alpha
+                
+                all_method_a_results.extend(method_a_results)
+                all_method_b_results.extend(method_b_results)
             
     all_individual_bus_results = pd.DataFrame(all_individual_bus_results)
     all_individual_bus_results['Label'] = all_individual_bus_results['Label'].apply(lambda x: list(map(int, x)))

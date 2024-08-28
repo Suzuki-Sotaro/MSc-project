@@ -71,16 +71,20 @@ def visualize_single_bus_varying_params(csv_file, output_file, varying_param):
 
 # Visualizing all buses
 visualize_all_buses("cusum_all_buses_fixed_threshold.csv", "cusum_all_buses_fixed_threshold.png")
-visualize_all_buses("glr_all_buses_fixed_threshold.csv", "glr_all_buses_fixed_threshold.png")
-visualize_all_buses("qq_all_buses_fixed_threshold.csv", "qq_all_buses_fixed_threshold.png")
-visualize_all_buses("gem_all_buses_fixed_alpha_threshold.csv", "gem_all_buses_fixed_alpha_threshold.png")
-visualize_all_buses("pca_all_buses_fixed_gamma_threshold.csv", "pca_all_buses_fixed_gamma_threshold.png")
+visualize_all_buses("glr_all_buses_fixed_threshold_window_size.csv", "glr_all_buses_fixed_threshold_window_size.png")
+visualize_all_buses("qq_all_buses_fixed_threshold_window_size.csv", "qq_all_buses_fixed_threshold_window_size.png")
+visualize_all_buses("gem_all_buses_fixed_alpha_threshold_k.csv", "gem_all_buses_fixed_alpha_threshold_k.png")
+visualize_all_buses("pca_all_buses_fixed_gamma_threshold_alpha.csv", "pca_all_buses_fixed_gamma_threshold_alpha.png")
 
 # Visualizing single bus with varying parameters
 visualize_single_bus_varying_params("cusum_bus_116_varying_threshold.csv", "cusum_bus_116_varying_threshold.png", "Cusum Threshold")
 visualize_single_bus_varying_params("glr_bus_135_varying_threshold.csv", "glr_bus_135_varying_threshold.png", "GLR Threshold")
+visualize_single_bus_varying_params("glr_bus_135_varying_window_size.csv", "glr_bus_135_varying_window_size.png", "Window Size")
 visualize_single_bus_varying_params("qq_bus_119_varying_threshold.csv", "qq_bus_119_varying_threshold.png", "QQ Threshold")
+visualize_single_bus_varying_params("qq_bus_119_varying_window_size.csv", "qq_bus_119_varying_window_size.png", "Window Size")
 visualize_single_bus_varying_params("gem_bus_115_varying_threshold.csv", "gem_bus_115_varying_threshold.png", "Threshold")
 visualize_single_bus_varying_params("gem_bus_115_varying_alpha.csv", "gem_bus_115_varying_alpha.png", "Alpha")
+visualize_single_bus_varying_params("gem_bus_115_varying_k.csv", "gem_bus_115_varying_k.png", "K")
 visualize_single_bus_varying_params("pca_bus_115_varying_threshold.csv", "pca_bus_115_varying_threshold.png", "Threshold")
 visualize_single_bus_varying_params("pca_bus_115_varying_gamma.csv", "pca_bus_115_varying_gamma.png", "Gamma")
+visualize_single_bus_varying_params("pca_bus_115_varying_alpha.csv", "pca_bus_115_varying_alpha.png", "Alpha")

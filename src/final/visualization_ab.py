@@ -6,7 +6,7 @@ import numpy as np
 
 # Input directory
 input_dir = "./results/table/"
-output_dir = "./results/plots/"
+output_dir = "./results/plots_ab/"
 os.makedirs(output_dir, exist_ok=True)
 
 # Helper function to plot data for Method A and B
@@ -22,7 +22,12 @@ def visualize_methods(csv_file, output_file):
     df = pd.read_csv(input_dir + csv_file)
     
     methods = df['Method'].unique()
-    fig, axs = plt.subplots(len(methods), 1, figsize=(10, 4*len(methods)), sharex=True)
+    n_methods = len(methods)
+    n_cols = 2
+    n_rows = (n_methods + 1) // n_cols
+    
+    fig, axs = plt.subplots(n_rows, n_cols, figsize=(15, 4*n_rows), sharex=True)
+    axs = axs.flatten()  # Flatten to easily index in a 1D array
     fig.suptitle(f'{csv_file.replace("_", " ").replace(".csv", "").title()}')
 
     for i, method in enumerate(methods):
@@ -34,6 +39,10 @@ def visualize_methods(csv_file, output_file):
             # Ensure the x axis matches the length of the labels
             x = range(len(true_labels))
             plot_anomalies(x, true_labels, detected_labels, method, axs[i])
+    
+    # Hide any empty subplots
+    for j in range(i + 1, len(axs)):
+        fig.delaxes(axs[j])
     
     plt.xlabel('Time')
     plt.tight_layout(rect=[0, 0, 1, 0.97])  # Add spacing between title and plots

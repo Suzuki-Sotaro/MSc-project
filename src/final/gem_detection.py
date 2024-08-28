@@ -106,7 +106,7 @@ def analyze_gem(df, buses, d, k_values, alpha_values, h_values):
                     
                     results.append({
                         'Bus': bus,
-                        'k': k,
+                        'K': k,
                         'Alpha': alpha,
                         'Threshold': h,
                         'd': d,
@@ -144,7 +144,7 @@ def analyze_gem_with_methods(df, buses, d, k_values, alpha_values, h_values, p_v
     
     method_a_results = pd.DataFrame(method_a_results)
     method_b_results = pd.DataFrame(method_b_results)
-    
+
     print("GEM analysis completed.")
     
     return (

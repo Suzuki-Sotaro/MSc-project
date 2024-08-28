@@ -36,7 +36,7 @@ def run_glr_analysis(df, buses, params):
 
 def run_gem_analysis(df, buses, params):
     gem_results = analyze_gem_with_methods(
-        df, buses, params['d'], params['k_values'], params['alpha_values'], 
+        df, buses, params['d'], params['k_values'], params['alpha_values_gem'], 
         params['h_values'], params['p_values'], params['aggregation_methods'], 
         params['sink_threshold_methods']
     )
@@ -52,7 +52,7 @@ def run_qq_analysis(df, buses, params):
 def run_pca_analysis(df, buses, params):  
     pca_results = analyze_pca_with_methods(
         df, buses, params['d'], params['gamma_values'], params['h_values'],
-        params['alpha'], params['p_values'], params['aggregation_methods'],
+        params['alpha_values_pca'], params['p_values'], params['aggregation_methods'],
         params['sink_threshold_methods']
     )
     combined_results_ab = pd.concat([pca_results[1], pca_results[2]], ignore_index=True)
@@ -82,22 +82,44 @@ def main():
     n_samples = 855
     output_dir = './results/table/'
     output_dir_figures = './results/figure/'
+    # change_detection_analysis-> visualizationまではリストの長さを5にする。
+    # visualizationをするときはdropの部分を削除する。
+    # method a bで実験するときはリストの長さを1にする。
     params = {
-        'window_sizes_qq': [6, 12, 24, 48, 96],
-        'window_sizes_glr': [6, 12, 24, 48, 96],
-        'cusum_threshold_values': [0.1, 0.2, 0.5, 1.0, 2.0],
-        'glr_threshold_values': [1000, 1500, 2000, 2500, 3000],
-        'qq_threshold_values': [0.01, 0.05, 0.1, 0.2, 0.4],
+        'window_sizes_qq': [24],
+        'window_sizes_glr': [24],
+        'cusum_threshold_values': [2.0],
+        'glr_threshold_values': [2000],
+        'qq_threshold_values': [0.1],
         'd': 3,
-        'k_values': [10],
-        'alpha_values': [0.1, 0.3, 0.5, 0.7, 0.9],
-        'h_values': [1, 3, 5, 7, 10],
-        'gamma_values': [0.1, 0.3, 0.5, 0.7, 0.9],
-        'alpha': 0.05,
+        'k_values': [16],
+        'alpha_values_gem': [0.2],
+        'h_values': [4],
+        'gamma_values': [0.9],
+        'alpha_values_pca': [0.2],
         'p_values': [0.1, 0.2, 0.5, 0.7, 0.9],
         'aggregation_methods': ['average', 'median', 'outlier_detection'],
         'sink_threshold_methods': ['average', 'minimum', 'maximum', 'median']
     }
+    
+    """
+    params = {
+        'window_sizes_qq': [24],
+        'window_sizes_glr': [24],
+        'cusum_threshold_values': [0.5],
+        'glr_threshold_values': [2000],
+        'qq_threshold_values': [0.1],
+        'd': 3,
+        'k_values': [16],
+        'alpha_values_gem': [0.2],
+        'h_values': [4],
+        'gamma_values': [0.9],
+        'alpha_values_pca': [0.2],
+        'p_values': [0.1, 0.2, 0.5, 0.7, 0.9],
+        'aggregation_methods': ['average', 'median', 'outlier_detection'],
+        'sink_threshold_methods': ['average', 'minimum', 'maximum', 'median']
+    }
+    """
 
     df, buses = load_and_preprocess_data(file_path, n_samples)
     statistics = calculate_statistics(df, buses)

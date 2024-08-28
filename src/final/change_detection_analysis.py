@@ -1,4 +1,3 @@
-# The following is the code for change_detection_analysis.py.
 import pandas as pd
 import os
 
@@ -39,12 +38,22 @@ process_and_save(qq_file, "qq_bus_119_varying_window_size.csv", [("Bus", "Bus119
 
 # GEM analysis
 gem_file = "gem_analysis_results.csv"
-process_and_save(gem_file, "gem_all_buses_fixed_alpha_threshold.csv", [("Alpha", 0.3), ("Threshold", 5)])
-process_and_save(gem_file, "gem_bus_115_varying_threshold.csv", [("Bus", "Bus115"), ("Alpha", 0.3)])
-process_and_save(gem_file, "gem_bus_115_varying_alpha.csv", [("Bus", "Bus115"), ("Threshold", 5)])
+# Initial analysis
+process_and_save(gem_file, "gem_all_buses_fixed_alpha_threshold_k.csv", [("Alpha", 0.2), ("Threshold", 4), ("K", 16)])
+# Bus-specific analysis 1: varying Threshold
+process_and_save(gem_file, "gem_bus_115_varying_threshold.csv", [("Bus", "Bus115"), ("Alpha", 0.2), ("K", 16)])
+# Bus-specific analysis 2: varying Alpha
+process_and_save(gem_file, "gem_bus_115_varying_alpha.csv", [("Bus", "Bus115"), ("Threshold", 4), ("K", 16)])
+# Bus-specific analysis 3: varying K
+process_and_save(gem_file, "gem_bus_115_varying_k.csv", [("Bus", "Bus115"), ("Threshold", 4), ("Alpha", 0.2)])
 
 # PCA analysis
 pca_file = "pca_analysis_results.csv"
-process_and_save(pca_file, "pca_all_buses_fixed_gamma_threshold.csv", [("Gamma", 0.5), ("Threshold", 5)])
-process_and_save(pca_file, "pca_bus_115_varying_threshold.csv", [("Bus", "Bus115"), ("Gamma", 0.5)])
-process_and_save(pca_file, "pca_bus_115_varying_gamma.csv", [("Bus", "Bus115"), ("Threshold", 5)])
+# Initial analysis
+process_and_save(pca_file, "pca_all_buses_fixed_gamma_threshold_alpha.csv", [("Gamma", 0.9), ("Threshold", 4), ("Alpha", 0.2)])
+# Bus-specific analysis 1: varying Threshold
+process_and_save(pca_file, "pca_bus_115_varying_threshold.csv", [("Bus", "Bus115"), ("Gamma", 0.9), ("Alpha", 0.2)])
+# Bus-specific analysis 2: varying Gamma
+process_and_save(pca_file, "pca_bus_115_varying_gamma.csv", [("Bus", "Bus115"), ("Threshold", 4), ("Alpha", 0.2)])
+# Bus-specific analysis 3: varying Alpha
+process_and_save(pca_file, "pca_bus_115_varying_alpha.csv", [("Bus", "Bus115"), ("Threshold", 4), ("Gamma", 0.9)])
