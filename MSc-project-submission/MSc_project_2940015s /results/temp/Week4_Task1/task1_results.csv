@@ -1,0 +1,10 @@
+Theta,Window Size,Change Point (Non-Parametric),False Alarm Rate (Non-Parametric),Expected Delay (Non-Parametric),Change Point (Parametric),False Alarm Rate (Parametric),Expected Delay (Parametric)
+0.1,10,21,0.79,-79,111,0.0,11
+0.1,20,44,0.56,-56,111,0.0,11
+0.1,30,67,0.33,-33,111,0.0,11
+0.5,10,24,0.76,-76,60,0.4,-40
+0.5,20,30,0.7,-70,60,0.4,-40
+0.5,30,45,0.55,-55,60,0.4,-40
+0.8,10,33,0.67,-67,34,0.66,-66
+0.8,20,39,0.61,-61,34,0.66,-66
+0.8,30,41,0.59,-59,34,0.66,-66
