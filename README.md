@@ -79,7 +79,36 @@ To set up the environment, follow these steps:
 
 The project uses Python 3.11+ and the following Python libraries:
 
+
 - **NumPy**: For numerical computations.
 - **Pandas**: For data manipulation and analysis.
 - **Matplotlib**: For creating static, animated, and interactive visualizations.
 - **SciPy**: For scientific computing and technical computing.
+
+Temp file
+
+
+
+https://github.com/user-attachments/assets/1df7efcb-e9a4-4a83-b799-f54ca263f425
+
+
+
+https://github.com/user-attachments/assets/ac361a4c-b699-4a71-8fe8-dd6193d65f0f
+
+
+
+https://github.com/user-attachments/assets/0fe15ecc-f6f2-4fba-8646-1ed7082482e6
+
+
+https://github.com/user-attachments/assets/92c9973a-722c-4500-83bf-00af9b73bfe2
+
+
+
+
+https://github.com/user-attachments/assets/6e3a891e-905e-4585-8a44-04e7b13e65f6
+
+
+
+https://github.com/user-attachments/assets/413da20f-a469-4cb4-8b54-82e92570ea67
+
+
